@@ -135,6 +135,9 @@ function replaceDir(from, to) {
 
 const drift = []
 
+// ベンダー展開前の共有 skill 一覧(上流で削除された skill のミラー掃除に使う)。
+const prevSharedSkills = listSkillDirs(join(ROOT, 'harness', 'skills'))
+
 // 1. harness/ のベンダー展開(self では対象外)。
 if (!isSelf) {
   if (CHECK) {
@@ -155,25 +158,20 @@ if (CHECK) {
   writeFileSync(join(ROOT, 'CLAUDE.md'), EXPECTED_CLAUDE)
 }
 
-// 4. 共有 skill のミラー(.claude/skills/<名>)。
+// 4. 共有 skill のミラー(.claude/skills/<名>)。共有かどうかは harness/skills/ の実体で判定する。
 const sharedSkills = listSkillDirs(join(harnessDir, 'skills'))
-const sharedListPath = join(ROOT, '.claude', 'skills', '.harness-shared.json')
-const prevShared = existsSync(sharedListPath) ? JSON.parse(readFileSync(sharedListPath, 'utf8')).skills ?? [] : []
 if (CHECK) {
   for (const name of sharedSkills) {
     drift.push(...diffDir(join(harnessDir, 'skills', name), join(ROOT, '.claude', 'skills', name), `.claude/skills/${name}`))
   }
-  const recorded = JSON.stringify({ skills: sharedSkills }, null, 2) + '\n'
-  if (readOr(sharedListPath, null) !== recorded) drift.push('.claude/skills/.harness-shared.json')
 } else {
   mkdirSync(join(ROOT, '.claude', 'skills'), { recursive: true })
-  for (const stale of prevShared.filter((n) => !sharedSkills.includes(n))) {
+  for (const stale of prevSharedSkills.filter((n) => !sharedSkills.includes(n))) {
     rmSync(join(ROOT, '.claude', 'skills', stale), { recursive: true, force: true })
   }
   for (const name of sharedSkills) {
     replaceDir(join(harnessDir, 'skills', name), join(ROOT, '.claude', 'skills', name))
   }
-  writeFileSync(sharedListPath, JSON.stringify({ skills: sharedSkills }, null, 2) + '\n')
 }
 
 // 5. .agents/skills/ の全体ミラー(Codex 用)。

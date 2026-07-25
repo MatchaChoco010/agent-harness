@@ -15,7 +15,7 @@
 //
 // OS 非依存の純 Node stdlib。
 
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 
 let input = ''
@@ -41,8 +41,8 @@ process.stdin.on('end', () => {
     isSelf = pin.repository === 'self'
   } catch { /* pin なしのリポジトリでは共有関連の判定を行わない */ }
   try {
-    const listPath = path.join(cwd, '.claude', 'skills', '.harness-shared.json')
-    if (existsSync(listPath)) sharedSkills = JSON.parse(readFileSync(listPath, 'utf8')).skills ?? []
+    const sharedDir = path.join(cwd, 'harness', 'skills')
+    if (existsSync(sharedDir)) sharedSkills = readdirSync(sharedDir)
   } catch { /* 無視 */ }
 
   const deny = (reason) => {
