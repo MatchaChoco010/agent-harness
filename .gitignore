@@ -1,0 +1,5 @@
+/scratch/
+.claude/settings.local.json
+harness/scripts/node_modules/
+.env
+/target/

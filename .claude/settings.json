@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(gh:*)",
+      "Bash(git commit:*)",
+      "Bash(git merge --continue:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/harness/scripts/hooks/harness-edit-guard.mjs\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/harness/scripts/hooks/bash-wrapper-guard.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}
