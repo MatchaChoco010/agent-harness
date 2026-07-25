@@ -9,10 +9,15 @@
 //   3. `CLAUDE.md`           … `@AGENTS.md` の 1 行(Claude Code 用の import)
 //   4. `.claude/skills/<名>` … `harness/skills/` 配下の共有 skill のミラー
 //   5. `.agents/skills/`     … `.claude/skills/` 全体のミラー(Codex 用)
+//   6. フック設定            … ハンドラ(harness/scripts/hooks/)を各ツールに登録する設定
+//                              (.claude/settings.json / .codex/hooks.json へのマージ、
+//                               .opencode/plugins/agent-harness.js の生成)
 //
-// 使い方(リポジトリルートで実行):
-//   node harness/scripts/sync/harness-sync.mjs          # 同期(展開と生成)
-//   node harness/scripts/sync/harness-sync.mjs --check  # 検証のみ。乖離があれば一覧を出して exit 1
+// 使い方:
+//   node harness/scripts/sync/harness-sync.mjs                    # カレント = リポジトリルートで同期
+//   node harness/scripts/sync/harness-sync.mjs --target <dir>     # 対象リポジトリを明示指定
+//   node harness/scripts/sync/harness-sync.mjs --check            # 検証のみ。乖離があれば一覧を出して exit 1
+//   node harness/scripts/sync/harness-sync.mjs --source <clone>   # pin の fetch の代わりにローカル clone をソースにする(harness-init 用)
 //
 // `.harness-version`(JSON、リポジトリルート):
 //   { "repository": "https://github.com/<owner>/agent-harness", "revision": "<tag または sha>" }
@@ -27,33 +32,35 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 
-const CHECK = process.argv.includes('--check')
+const argv = process.argv.slice(2)
+const CHECK = argv.includes('--check')
+function argValue(name) {
+  const i = argv.indexOf(name)
+  return i >= 0 && argv[i + 1] ? argv[i + 1] : null
+}
 
 function fail(msg) {
   console.error(msg)
   process.exit(1)
 }
 
-// リポジトリルートの特定(.harness-version を上方向に探す)。
-function findRoot() {
-  let dir = resolve(process.cwd())
-  for (;;) {
-    if (existsSync(join(dir, '.harness-version'))) return dir
-    const parent = resolve(dir, '..')
-    if (parent === dir) fail('.harness-version が見つからない。リポジトリルートに置いてから実行すること。')
-    dir = parent
-  }
+// 対象リポジトリのルート。--target で明示するか、カレントディレクトリをルートとして扱う(探索はしない)。
+const ROOT = resolve(argValue('--target') ?? process.cwd())
+if (!existsSync(join(ROOT, '.harness-version'))) {
+  fail(`${ROOT} に .harness-version が無い。リポジトリルートで実行するか --target <dir> で指定すること(初期セットアップは harness-init.mjs)。`)
 }
-
-const ROOT = findRoot()
 const pin = JSON.parse(readFileSync(join(ROOT, '.harness-version'), 'utf8'))
 const isSelf = pin.repository === 'self'
 
 // --- ソース harness/ の解決 -------------------------------------------------
 
+const SOURCE = argValue('--source')
 let srcHarness
 let tempDir = null
-if (isSelf) {
+if (SOURCE) {
+  srcHarness = join(resolve(SOURCE), 'harness')
+  if (!existsSync(srcHarness)) fail(`--source に harness/ が存在しない: ${SOURCE}`)
+} else if (isSelf) {
   srcHarness = join(ROOT, 'harness')
 } else {
   if (!pin.repository || !pin.revision) fail('.harness-version には repository と revision が必要。')
@@ -131,6 +138,77 @@ function replaceDir(from, to) {
   cpSync(from, to, { recursive: true })
 }
 
+// --- フック設定(全ツール共通のハンドラを各ツールに登録する) -----------------
+//
+// ハンドラは harness/scripts/hooks/ の 2 本(bash-wrapper-guard / harness-edit-guard)。
+// sync が管理するのは command にこのパスを含むエントリだけで、プロジェクト独自の
+// フック・permissions は保持する(マージ)。opencode はプラグインファイルを丸ごと生成する。
+
+const HOOK_MARKER = 'harness/scripts/hooks/'
+
+const CLAUDE_HOOK_ENTRIES = [
+  { matcher: 'Edit|Write|MultiEdit', hooks: [{ type: 'command', command: 'node "${CLAUDE_PROJECT_DIR}/harness/scripts/hooks/harness-edit-guard.mjs"' }] },
+  { matcher: 'Bash', hooks: [{ type: 'command', command: 'node "${CLAUDE_PROJECT_DIR}/harness/scripts/hooks/bash-wrapper-guard.mjs"' }] },
+]
+const CLAUDE_DENY = ['Bash(gh:*)', 'Bash(git commit:*)', 'Bash(git merge --continue:*)']
+
+const CODEX_HOOK_ENTRIES = [
+  { matcher: 'Edit|Write|apply_patch', hooks: [{ type: 'command', command: 'node harness/scripts/hooks/harness-edit-guard.mjs' }] },
+  { matcher: 'Bash', hooks: [{ type: 'command', command: 'node harness/scripts/hooks/bash-wrapper-guard.mjs' }] },
+]
+
+// 既存の設定 JSON に sync 管理分をマージした期待内容を返す(冪等)。
+function mergedHookConfig(configPath, entries, deny) {
+  let obj = {}
+  try { obj = JSON.parse(readFileSync(configPath, 'utf8')) } catch { /* 無ければ空から */ }
+  if (deny) {
+    obj.permissions ??= {}
+    const cur = obj.permissions.deny ?? []
+    obj.permissions.deny = [...cur, ...deny.filter((d) => !cur.includes(d))]
+  }
+  obj.hooks ??= {}
+  const others = (obj.hooks.PreToolUse ?? []).filter(
+    (e) => !(e.hooks ?? []).some((h) => String(h.command ?? '').includes(HOOK_MARKER)),
+  )
+  obj.hooks.PreToolUse = [...entries, ...others]
+  return JSON.stringify(obj, null, 2) + '\n'
+}
+
+const OPENCODE_PLUGIN = `// このファイルは生成物である。直接編集しない。再生成: node harness/scripts/sync/harness-sync.mjs
+// 共有ハーネスのフックハンドラ(harness/scripts/hooks/)を opencode に接続するプラグイン。
+import { spawn } from "node:child_process"
+
+const runHook = (script, toolInput, directory) =>
+  new Promise((resolvePromise) => {
+    const child = spawn(process.execPath, [script], { cwd: directory, stdio: ["pipe", "pipe", "ignore"] })
+    let out = ""
+    child.stdout.on("data", (c) => { out += c })
+    child.on("close", () => resolvePromise(out))
+    child.on("error", () => resolvePromise(""))
+    child.stdin.end(JSON.stringify({ tool_input: toolInput, cwd: directory }))
+  })
+
+export const AgentHarnessGuards = async ({ directory }) => ({
+  "tool.execute.before": async (input, output) => {
+    const args = output.args ?? {}
+    let script = null
+    let toolInput = null
+    if (input.tool === "bash") {
+      script = "harness/scripts/hooks/bash-wrapper-guard.mjs"
+      toolInput = { command: args.command ?? "" }
+    } else if (["edit", "write", "apply_patch", "patch"].includes(input.tool)) {
+      script = "harness/scripts/hooks/harness-edit-guard.mjs"
+      toolInput = { file_path: args.filePath ?? "", patchText: args.patchText ?? "" }
+    }
+    if (!script) return
+    const out = await runHook(script, toolInput, directory)
+    let decision
+    try { decision = JSON.parse(out).hookSpecificOutput } catch { return }
+    if (decision && decision.permissionDecision === "deny") throw new Error(decision.permissionDecisionReason)
+  },
+})
+`
+
 // --- 実行 --------------------------------------------------------------------
 
 const drift = []
@@ -181,6 +259,21 @@ if (CHECK) {
   drift.push(...diffDir(claudeSkills, agentsSkills, '.agents/skills'))
 } else {
   replaceDir(claudeSkills, agentsSkills)
+}
+
+// 6. フック設定(Claude Code / Codex / opencode)。
+const hookConfigs = [
+  { path: join(ROOT, '.claude', 'settings.json'), rel: '.claude/settings.json', content: mergedHookConfig(join(ROOT, '.claude', 'settings.json'), CLAUDE_HOOK_ENTRIES, CLAUDE_DENY) },
+  { path: join(ROOT, '.codex', 'hooks.json'), rel: '.codex/hooks.json', content: mergedHookConfig(join(ROOT, '.codex', 'hooks.json'), CODEX_HOOK_ENTRIES, null) },
+  { path: join(ROOT, '.opencode', 'plugins', 'agent-harness.js'), rel: '.opencode/plugins/agent-harness.js', content: OPENCODE_PLUGIN },
+]
+for (const { path: p, rel, content } of hookConfigs) {
+  if (CHECK) {
+    if (readOr(p, null) !== content) drift.push(rel)
+  } else {
+    mkdirSync(resolve(p, '..'), { recursive: true })
+    writeFileSync(p, content)
+  }
 }
 
 if (tempDir) rmSync(tempDir, { recursive: true, force: true })

@@ -25,16 +25,34 @@
 import { createSign } from 'node:crypto'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { request } from 'node:https'
-import { tmpdir } from 'node:os'
+import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 const REFRESH_MARGIN_MS = 5 * 60 * 1000 // 失効 5 分前で作り直す
 
+// 資格情報ファイル(KEY=VALUE 形式)。harness-init が作成する。
+export const CREDENTIALS_FILE = join(homedir(), '.config', 'agent-harness', 'env')
+
+function readCredentialsFile() {
+  try {
+    const vars = {}
+    for (const line of readFileSync(CREDENTIALS_FILE, 'utf8').split(/\r?\n/)) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/)
+      if (m && !line.trimStart().startsWith('#')) vars[m[1]] = m[2]
+    }
+    return vars
+  } catch {
+    return {}
+  }
+}
+
+// 解決順: 環境変数 → 資格情報ファイル。
 function config() {
-  const appId = process.env.BOT_GH_APP_ID
-  const installationId = process.env.BOT_GH_INSTALLATION_ID
-  const keyPath = process.env.BOT_GH_APP_KEY
+  const file = readCredentialsFile()
+  const appId = process.env.BOT_GH_APP_ID || file.BOT_GH_APP_ID
+  const installationId = process.env.BOT_GH_INSTALLATION_ID || file.BOT_GH_INSTALLATION_ID
+  const keyPath = process.env.BOT_GH_APP_KEY || file.BOT_GH_APP_KEY
   const missing = []
   if (!appId) missing.push('BOT_GH_APP_ID')
   if (!installationId) missing.push('BOT_GH_INSTALLATION_ID')
@@ -42,7 +60,7 @@ function config() {
   if (missing.length) {
     throw new Error(
       `GitHub App bot の設定が不足しています: ${missing.join(', ')}\n` +
-        '.claude/settings.local.json の "env" に App ID / Installation ID / 秘密鍵パスを設定してください。\n' +
+        `環境変数か ${CREDENTIALS_FILE} に設定する(harness-init が作成する)。\n` +
         '詳細: harness/scripts/gh/README.md',
     )
   }

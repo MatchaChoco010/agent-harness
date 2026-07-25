@@ -20,7 +20,7 @@ PR/Issue の作成・レビュー返信・コミットは「その操作に使�
 
 **複数行の本文は `--body-file`(ファイル)か stdin(`--body-file - <<'EOF'` / `-F body=@<file>`)で渡す。`--body "..."` の argv に複数行を載せない** — Git Bash → ネイティブ Windows exe の argv 変換で先頭1行しか渡らず本文が切れる(理由と手順は `harness/docs/git-and-pr.md`「複数行の本文は stdin で渡す」)。
 
-これを担保するため、`.claude/settings.json` の `permissions.deny` で素の `gh`(`Bash(gh:*)`)・`git commit`(`Bash(git commit:*)`)・`git merge --continue`(`Bash(git merge --continue:*)`)を禁止し、加えて PreToolUse フック `scripts/hooks/bash-wrapper-guard.mjs` が検知して「代わりに `gh.mjs` / `commit.mjs` / `merge-commit.mjs` を使え」と理由つきで block する(deny がハードゲート、フックが案内)。
+これを担保するため、`.claude/settings.json` の `permissions.deny` で素の `gh`(`Bash(gh:*)`)・`git commit`(`Bash(git commit:*)`)・`git merge --continue`(`Bash(git merge --continue:*)`)を禁止し、加えて PreToolUse フック `harness/scripts/hooks/bash-wrapper-guard.mjs` が検知して「代わりに `gh.mjs` / `commit.mjs` / `merge-commit.mjs` を使え」と理由つきで block する(deny がハードゲート、フックが案内。これらの設定は harness-sync が全ツール分を生成・マージする)。
 これらはエージェントが **Bash ツールで直接** 素のコマンドを叩くのを止めるだけで、ラッパーが内部で `gh` / `git` を child_process として起動する分には影響しない(permission もフックも Bash ツール呼び出しにかかり、スクリプト内のサブプロセス起動は対象外)。
 したがって「素のコマンドは禁止・ラッパー経由は許可」が両立する。
 
@@ -35,23 +35,17 @@ PR/Issue の作成・レビュー返信・コミットは「その操作に使�
 - `gh.mjs` / `pr-comments.mjs` / `pr-reply.mjs` はこの token を `GH_TOKEN` に入れて `gh` を実行する。
 - `commit.mjs` / `merge-commit.mjs` はこの token で Git Data API(blob → tree → commit → ref 更新)を直接呼び、コミットを bot 名義かつ Verified で作る(共通ロジックは `git-data.mjs`)。author/committer を指定せずに作るのがポイント(指定しなければ token の持ち主 = bot 名義になり、GitHub がサーバ署名する)。
 
-## 設定(環境変数)
+## 設定(資格情報)
 
-Claude Code では `.claude/settings.local.json` の `"env"` に置く(このファイルは追跡対象外・マシンローカル)。Codex 等ほかのツールへの渡し方は agent-harness リポジトリの README「資格情報の環境変数」を参照。
+`app-token.mjs` は資格情報を **環境変数 → `~/.config/agent-harness/env`(KEY=VALUE 形式)** の順で解決する。
+後者は agent-harness の clone 直下の `.env` から `harness-init.mjs` が導入する(→ agent-harness リポジトリの README「セットアップ」)。
 
-```json
-{
-  "env": {
-    "BOT_GH_APP_ID": "<App ID>",
-    "BOT_GH_INSTALLATION_ID": "<Installation ID>",
-    "BOT_GH_APP_KEY": "<秘密鍵 .pem の絶対パス>"
-  }
-}
-```
+- `BOT_GH_APP_ID` … App ID
+- `BOT_GH_INSTALLATION_ID` … Installation ID
+- `BOT_GH_APP_KEY` … 秘密鍵 `.pem` の絶対パス
 
-- **App ID / Installation ID は機密ではない**ので平文で置いてよい。
-- **機密は秘密鍵 `.pem` だけ**。リポジトリ外(例: `C:\Users\<user>\.github\...pem`)に置き、絶対にコミットしない。
-- `settings.local.json` の `env` はセッション開始時に読まれる。設定を変えたら Claude Code を再起動する。
+App ID / Installation ID は機密ではない。**機密は秘密鍵 `.pem` だけ**で、リポジトリ外に置く。
+プロジェクトごとに bot を切り替えたいときは、環境変数が優先されることを利用してそのプロジェクトだけ環境変数で上書きする(Claude Code なら `.claude/settings.local.json` の `"env"`)。
 
 ## GitHub App の作り直し・再セットアップ
 
@@ -61,6 +55,6 @@ GitHub App(`matchachoco010-bot`)は GitHub の Web UI で作成する(`gh` に A
 2. 作成後ページの **App ID** を控える。
 3. **Generate a private key** で `.pem` を落とし、リポジトリ外に置く。
 4. 左メニュー **Install App** → 対象リポジトリのみにインストール。インストール後 URL `settings/installations/<数字>` の数字が **Installation ID**。
-5. 上記 3 値を `.claude/settings.local.json` の `env` に設定し、`node harness/scripts/gh/app-token.mjs --check` で疎通確認する。
+5. 上記 3 値を agent-harness clone 直下の `.env` に設定して `harness-init.mjs` を実行し(→ agent-harness リポジトリの README「セットアップ」)、`node harness/scripts/gh/app-token.mjs --check` で疎通確認する。
 
 秘密鍵を紛失/漏洩したら、App 設定ページで古い鍵を削除して新しい鍵を発行し、`BOT_GH_APP_KEY` を差し替える。

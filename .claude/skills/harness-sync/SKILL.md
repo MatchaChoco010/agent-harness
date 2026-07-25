@@ -32,6 +32,10 @@ node harness/scripts/sync/harness-sync.mjs
 3. `CLAUDE.md` を生成する(`@AGENTS.md` の import 1 行)。
 4. `harness/skills/` 配下の共有 skill を `.claude/skills/` にミラーする。
 5. `.claude/skills/` 全体を `.agents/skills/` にミラーする(Codex 用)。
+6. フック設定を各ツールに用意する(`.claude/settings.json` / `.codex/hooks.json` へ sync 管理エントリをマージ、`.opencode/plugins/agent-harness.js` を生成。プロジェクト独自のフック・permissions は保持される)。
+
+リポジトリルート以外から実行するときは `--target <dir>` で対象リポジトリを明示する(ルートの探索はしない)。
+プロジェクトへの初期導入は agent-harness の clone から `node harness/scripts/sync/harness-init.mjs <対象リポジトリのパス>` で行う(pin・PROJECT.md 雛形・資格情報の導入・初回 sync までを一括で行う。→ agent-harness リポジトリの README)。
 
 ## CI での検証
 
@@ -57,4 +61,5 @@ node harness/scripts/sync/harness-sync.mjs --check
 ## 禁止事項
 
 - **`harness/` 配下を直接編集しない。** ベンダーコピーなので、直接編集しても次の sync で消える上、`--check` で乖離として検出される。共有側を変えたいときは `harness-update` の手順で agent-harness リポジトリへ PR を出す。
-- `AGENTS.md` / `CLAUDE.md` / `.claude/skills/` の共有ミラー / `.agents/skills/` も生成物なので直接編集しない。プロジェクト固有の規約は `PROJECT.md` に、プロジェクト固有の skill は `.claude/skills/`(共有ミラー以外の名前)に置く。
+- `AGENTS.md` / `CLAUDE.md` / `.claude/skills/` の共有ミラー / `.agents/skills/` / `.opencode/plugins/agent-harness.js` も生成物なので直接編集しない。プロジェクト固有の規約は `PROJECT.md` に、プロジェクト固有の skill は `.claude/skills/`(共有ミラー以外の名前)に置く。
+- `.claude/settings.json` / `.codex/hooks.json` の sync 管理エントリ(command に `harness/scripts/hooks/` を含むもの)は sync が上書きする。プロジェクト独自のフック・permissions の追記は自由(保持される)。

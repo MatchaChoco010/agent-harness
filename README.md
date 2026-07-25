@@ -8,11 +8,9 @@
 - **常時規約**(`harness/AGENTS.md`): どのプロジェクトでも変わらない standing なゲート(Git/PR 運用、markdown 規約、design doc ルールへのポインタなど)。
 - **参照ドキュメント**(`harness/docs/`): ハーネス編集の作法、Git/Issue/PR の詳細、markdown の書き方、design doc のルールとテンプレート。
 - **skills**(`harness/skills/`): SKILL.md 標準形式のワークフロー手順(design doc の執筆・レビュー、PR ワークフロー、日本語技術文書の規範など)。
-- **スクリプト**(`harness/scripts/`): bot 名義の GitHub 操作ヘルパー、フックハンドラ、同期スクリプト本体。
+- **スクリプト**(`harness/scripts/`): bot 名義の GitHub 操作ヘルパー、フックハンドラ、同期・初期化スクリプト。
 
 ## セットアップ
-
-GitHub App の作成とインストールは Web UI での手作業になる(自動化できるのは疎通確認から)。
 
 ### 1. GitHub App(bot)
 
@@ -22,48 +20,28 @@ GitHub App の作成とインストールは Web UI での手作業になる(自
 
 詳細は [harness/scripts/gh/README.md](harness/scripts/gh/README.md)。
 
-### 2. 資格情報の環境変数
+### 2. クローンと資格情報
 
-| 変数 | 値 |
-|---|---|
-| `BOT_GH_APP_ID` | App ID |
-| `BOT_GH_INSTALLATION_ID` | Installation ID |
-| `BOT_GH_APP_KEY` | 秘密鍵 `.pem` の絶対パス |
+このリポジトリを任意の場所に clone し、clone 直下に `.env`(追跡対象外)を置く。
 
-- **Claude Code**: プロジェクトの `.claude/settings.local.json`(未追跡)の `env` に置く。
+```sh
+BOT_GH_APP_ID=<App ID>
+BOT_GH_INSTALLATION_ID=<Installation ID>
+BOT_GH_APP_KEY=<秘密鍵 .pem の絶対パス>
+```
 
-  ```json
-  { "env": { "BOT_GH_APP_ID": "...", "BOT_GH_INSTALLATION_ID": "...", "BOT_GH_APP_KEY": "..." } }
-  ```
+### 3. プロジェクトの初期化
 
-- **Codex CLI**: プロジェクトの `.codex/config.toml` に置き、`.gitignore` に追加する(trust 済みプロジェクトで有効)。全プロジェクト共通でよければ `~/.codex/config.toml` でも同じ。
+clone から init を実行し、対象リポジトリを指定する。
 
-  ```toml
-  [shell_environment_policy.set]
-  BOT_GH_APP_ID = "..."
-  BOT_GH_INSTALLATION_ID = "..."
-  BOT_GH_APP_KEY = "..."
-  ```
+```sh
+node harness/scripts/sync/harness-init.mjs <対象リポジトリのパス>
+```
 
-- **その他のツール**: OS のユーザー環境変数に設定する。
+これが `.harness-version`(clone の origin と HEAD で pin)、`PROJECT.md` の雛形、資格情報(`~/.config/agent-harness/env`)、ベンダーコピー `harness/` と生成物(`AGENTS.md` / `CLAUDE.md` / skills ミラー / 各ツールのフック設定)を用意する。
+疎通確認は対象リポジトリで `node harness/scripts/gh/app-token.mjs --check`。
 
-疎通確認: `node harness/scripts/gh/app-token.mjs --check`
-
-### 3. ハーネスの展開
-
-1. プロジェクトのルートに `.harness-version` を置く:
-
-   ```json
-   { "repository": "https://github.com/MatchaChoco010/agent-harness", "revision": "<tag または sha>" }
-   ```
-
-2. プロジェクト固有の常時規約を `PROJECT.md` に書く。
-3. `node harness/scripts/sync/harness-sync.mjs` を実行する。
-   スクリプトは、カレントディレクトリから `.harness-version` を探して展開先のプロジェクトを特定し、pin した revision をリモートから取得して展開するため、スクリプト本体の置き場所はどこでもよい。
-   初回はまだ `harness/` が無いので、このリポジトリを clone してそのスクリプトをプロジェクトルートで実行する。以後はベンダーコピー内のスクリプトを使う。
-   生成されるもの: `harness/`(ベンダーコピー)、`AGENTS.md`(`harness/AGENTS.md` + `PROJECT.md` の結合)、`CLAUDE.md`(`@AGENTS.md`)、skills のミラー(`.claude/skills/` と `.agents/skills/`)。
-4. フックを使うツールごとに登録する(ハンドラは `harness/scripts/hooks/` を共用): Claude Code は `.claude/settings.json`(本リポジトリのものが例)、Codex は `.codex/hooks.json`、opencode は `.opencode/plugins/`。
-5. CI に `node harness/scripts/sync/harness-sync.mjs --check` を置く(例: [.github/workflows/harness-check.yml](.github/workflows/harness-check.yml))。
+あとは `PROJECT.md` にプロジェクト固有の常時規約を書いて `node harness/scripts/sync/harness-sync.mjs` を再実行し、CI に `--check` を置く(例: [.github/workflows/harness-check.yml](.github/workflows/harness-check.yml))。
 
 ## 運用
 
