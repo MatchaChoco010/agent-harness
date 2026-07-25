@@ -22,7 +22,7 @@
 ### 2. CLI のインストール
 
 ```sh
-cargo install --git https://github.com/MatchaChoco010/agent-harness
+cargo install --git https://github.com/MatchaChoco010/agent-harness --branch main
 ```
 
 ### 3. プロジェクトの初期化

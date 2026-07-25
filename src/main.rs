@@ -33,7 +33,7 @@ const CRED_KEYS: [&str; 3] = ["BOT_GH_APP_ID", "BOT_GH_INSTALLATION_ID", "BOT_GH
 /// sync が管理するフックエントリの識別子(command にこれを含むエントリだけを差し替える)。
 const HOOK_MARKER: &str = "harness/scripts/hooks/";
 
-const USAGE: &str = "使い方:\n  agent-harness init [--revision <rev>]   対象リポジトリのルートで実行し、共有ハーネスを導入する\n  agent-harness update [<rev>]            pin を進めて同期する(省略時はリモートの最新)\n  agent-harness sync [--source <dir>]     pin(または --source のローカルソース)から展開・生成し直す\n  agent-harness check [--source <dir>]    生成物の検証のみ。乖離があれば一覧を出して exit 1";
+const USAGE: &str = "使い方:\n  agent-harness init [--revision <rev>]   対象リポジトリのルートで実行し、共有ハーネスを導入する(rev 省略時は main の先端)\n  agent-harness update [<rev>]            pin を進めて同期する(rev 省略時は main の先端)\n  agent-harness sync [--source <dir>]     pin(または --source のローカルソース)から展開・生成し直す\n  agent-harness check [--source <dir>]    生成物の検証のみ。乖離があれば一覧を出して exit 1";
 
 const OPENCODE_PLUGIN: &str = r#"// このファイルは生成物である。直接編集しない。再生成: agent-harness sync
 // 共有ハーネスのフックハンドラ(harness/scripts/hooks/)を opencode に接続するプラグイン。
@@ -95,7 +95,7 @@ fn main() -> ExitCode {
 
 fn init(args: &[String]) -> Result<ExitCode, String> {
     let revision = match args {
-        [] => resolve_remote_head(REPOSITORY)?,
+        [] => resolve_remote_main(REPOSITORY)?,
         [flag, rev] if flag == "--revision" => rev.clone(),
         _ => return Err(format!("引数が不正。\n{USAGE}")),
     };
@@ -122,7 +122,7 @@ fn update(args: &[String]) -> Result<ExitCode, String> {
     let root = env::current_dir().map_err(|e| e.to_string())?;
     let pin = read_pin(&root)?;
     let revision = match args {
-        [] => resolve_remote_head(&pin.repository)?,
+        [] => resolve_remote_main(&pin.repository)?,
         [rev] => rev.clone(),
         _ => return Err(format!("引数が不正。\n{USAGE}")),
     };
@@ -384,13 +384,14 @@ fn fetch_repo(url: &str, rev: &str) -> Result<PathBuf, String> {
     Ok(tmp)
 }
 
-fn resolve_remote_head(url: &str) -> Result<String, String> {
+/// rev 省略時の取得元。動作保証ブランチ main の先端に固定し、default branch には依存しない。
+fn resolve_remote_main(url: &str) -> Result<String, String> {
     let cwd = env::current_dir().map_err(|e| e.to_string())?;
-    let out = git(&cwd, &["ls-remote", url, "HEAD"])?;
+    let out = git(&cwd, &["ls-remote", url, "refs/heads/main"])?;
     out.split_whitespace()
         .next()
         .map(str::to_string)
-        .ok_or_else(|| format!("リモートの HEAD を解決できない: {url}"))
+        .ok_or_else(|| format!("リモートに main ブランチが無い: {url}"))
 }
 
 fn git(cwd: &Path, args: &[&str]) -> Result<String, String> {
