@@ -143,6 +143,15 @@ node harness/scripts/gh/merge-commit.mjs "Merge origin/develop into feature/hoge
   git branch -d feature/hoge
   ```
 
+## develop → main のマージ(ユーザーの指示があったときのみ)
+
+ユーザーから develop を main へマージするよう指示されたら、GitHub の Merges API で行う(サーバ側で bot 名義のマージコミットが作られる。ローカルの `git merge` + `merge-commit.mjs` は develop / main への直接コミット拒否により使えない)。
+
+```sh
+node harness/scripts/gh/gh.mjs api repos/<owner>/<repo>/merges -f base=main -f head=develop -f commit_message="Merge develop into main"
+git fetch --prune
+```
+
 ## ヘルパー
 
 - `harness/scripts/gh/gh.mjs` — 素の `gh` を bot トークン経由で実行するラッパー。GitHub 操作はこれを通す。
