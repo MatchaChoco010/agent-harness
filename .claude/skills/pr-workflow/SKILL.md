@@ -128,6 +128,11 @@ node harness/scripts/gh/merge-commit.mjs "Merge origin/develop into feature/hoge
   node harness/scripts/gh/gh.mjs pr view <PR番号> --json state,mergedAt,mergeStateStatus
   node harness/scripts/gh/gh.mjs pr checks <PR番号>
   ```
+- マージを確認したら、PR に紐づく Issue が閉じたかも確認する。`Closes #N` は default branch へのマージでしか自動クローズされない(→ `harness/docs/git-and-pr.md`「ブランチ運用」)ので、開いたままなら明示的に閉じる。
+  ```sh
+  node harness/scripts/gh/gh.mjs issue view <Issue番号> --json state --jq .state
+  node harness/scripts/gh/gh.mjs issue close <Issue番号> --comment "PR #<PR番号> のマージで対応済み。"
+  ```
 - マージ後はローカルをリモートに追従させる。
   ```sh
   git fetch --prune
