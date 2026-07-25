@@ -85,7 +85,7 @@ process.stdin.on('end', () => {
         return { deny: `${rel} は共有ハーネスのベンダーコピーであり、このリポジトリでは編集しない。` +
           '共有ハーネスの変更は agent-harness リポジトリへの Issue + PR で行い、マージ後に ' +
           '`agent-harness update <rev>` で取り込むこと(→ harness-update skill)。' +
-          'プロジェクト固有の内容なら PROJECT.md・.claude/skills/(共有ミラー以外)・プロジェクトの docs/ に書くこと。' }
+          'プロジェクト固有の内容なら PROJECT.md・.claude/skills/(共有ミラー以外)・プロジェクトの docs/harness/ に書くこと。' }
       }
       return { remind: [
         '<harness-edit-guard>',
@@ -104,6 +104,7 @@ process.stdin.on('end', () => {
       rel === '.codex/hooks.json' ||
       rel === '.harness-version' ||
       rel.startsWith('.claude/skills/') ||
+      rel.startsWith('docs/harness/') ||
       rel.startsWith('scripts/')
     if (!isProjectHarness) return null
 

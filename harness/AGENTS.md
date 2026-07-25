@@ -29,5 +29,6 @@ markdown を書く・編集するときは [harness/docs/markdown.md](harness/do
 ## skills とハーネスの編集
 
 手順化された作業は skill(SKILL.md 標準形式)で行う。
-ハーネス(常時規約のソース / skill / `harness/docs/` / design doc のルール / スクリプト)を編集するとき、および作業で得た知見を恒久ルールや skill へ昇格するときは [harness/docs/editing.md](harness/docs/editing.md) に従う。
+ユーザーに是正されたとき・一般化できる指摘を受けたとき・非自明な失敗を調査して解決したときは、そのターンのうちに `learnings` skill の基準で記録する。
+ハーネス(常時規約のソース / skill / `harness/docs/` / design doc のルール / スクリプト)を編集するとき、および記録した知見を恒久ルールや skill へ昇格するときは [harness/docs/editing.md](harness/docs/editing.md) に従う。
 消費側プロジェクトの `harness/` は sync が管理する生成物なので直接編集しない。
