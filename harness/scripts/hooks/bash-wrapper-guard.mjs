@@ -11,6 +11,10 @@
 // これにより `node harness/scripts/gh/gh.mjs`(引数中の gh)や `node harness/scripts/gh/commit.mjs`、
 // `git status` / `git commit-tree` は誤検知しない。
 //
+// また、bot ラッパーで Issue/PR/コメント/コミットの本文を書く操作(gh.mjs issue/pr、
+// pr-reply.mjs、commit.mjs、merge-commit.mjs)を検知したら、日本語の言葉選び・表現の規範
+// (harness/docs/japanese.md)を読むよう非ブロックのリマインダーを注入する。
+//
 // OS 非依存の純 Node stdlib。起動は
 // `node "${CLAUDE_PROJECT_DIR}/scripts/hooks/bash-wrapper-guard.mjs"`。
 
@@ -34,6 +38,8 @@ const GIT_MERGE_CONTINUE_RE = new RegExp(
   POS + String.raw`git\s+(?:-\S+(?:\s+[^-\s]\S*)?\s+)*merge\s+(?:\S+\s+)*--continue(?=\s|$)`,
   'm',
 )
+// bot ラッパーで日本語の本文を書く操作(Issue/PR の作成・コメント・返信、コミットメッセージ)。
+const JAPANESE_POST_RE = /gh\.mjs\s+(?:issue|pr)\b|gh[\\/](?:pr-reply|commit|merge-commit)\.mjs/
 
 let input = ''
 process.stdin.setEncoding('utf8')
@@ -48,7 +54,17 @@ process.stdin.on('end', () => {
   const hitsGh = GH_RE.test(command)
   const hitsGitCommit = GIT_COMMIT_RE.test(command)
   const hitsMergeContinue = GIT_MERGE_CONTINUE_RE.test(command)
-  if (!hitsGh && !hitsGitCommit && !hitsMergeContinue) process.exit(0)
+  if (!hitsGh && !hitsGitCommit && !hitsMergeContinue) {
+    if (JAPANESE_POST_RE.test(command)) {
+      process.stdout.write(JSON.stringify({
+        hookSpecificOutput: {
+          hookEventName: 'PreToolUse',
+          additionalContext: '<japanese-writing-reminder>これから書く Issue/PR/コメント/コミットメッセージの日本語は harness/docs/japanese.md(言葉選び・表現の規範)に従う。このセッションで未読なら、先に Read してから本文を書くこと。</japanese-writing-reminder>',
+        },
+      }) + '\n')
+    }
+    process.exit(0)
+  }
 
   const reasons = []
   if (hitsGh) {

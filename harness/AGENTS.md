@@ -9,10 +9,11 @@
 design doc を作成・変更・レビューするときは [harness/docs/design/README.md](harness/docs/design/README.md)(ルール)と [harness/docs/design/template.md](harness/docs/design/template.md)(テンプレート)に従う。
 執筆は `design-doc-write` skill、レビューは `design-doc-review` skill、レビューを収束まで自動で回すときは `design-doc` skill を使う。
 
-## Markdown の書き方(全 markdown 共通)
+## Markdown と日本語の書き方
 
-markdown を書く・編集するときは [harness/docs/markdown.md](harness/docs/markdown.md) に従う(見た目のための文中改行の禁止・一文一行・用語の選び方を含む)。
-日本語の文章の書き方は `japanese-tech-writing` skill に従う。
+markdown を書く・編集するときは [harness/docs/markdown.md](harness/docs/markdown.md) に従う(見た目のための文中改行の禁止・一文一行を含む)。
+日本語を書くときは、書く場所(ドキュメント・PR/Issue・コメント・コミットメッセージ)を問わず [harness/docs/japanese.md](harness/docs/japanese.md)(言葉選び・表現)に従う。
+まとまった技術文書の段落構成は `japanese-tech-writing` skill に従う。
 
 ## Git・Issue・PR(常時のゲート)
 

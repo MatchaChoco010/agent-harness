@@ -10,7 +10,7 @@ description: 既存の design doc を「設計自体の妥当性」を主眼に�
 
 ## 主眼は「設計自体の妥当性」(規約遵守は前提ゲート)
 
-規約(`harness/docs/design/README.md` / `harness/docs/design/template.md`)への適合は合格の必要条件にすぎず、レビューの本題ではない。
+規約(`harness/docs/design/README.md` / `harness/docs/design/template.md`、日本語の言葉選び・表現は `harness/docs/japanese.md`)への適合は合格の必要条件にすぎず、レビューの本題ではない。
 本当に確かめるのは、**その設計が、現状からの変更として、今後のプロジェクトの基盤として妥当に立つか**である。
 API 設計なら立場の違う利用者のユースケースで使い勝手をトレースし、内部設計なら性能・保守性を疑い、**問題の立て方そのもの**(そもそも要るか、別の手段で済まないか)までさかのぼって問う。
 
