@@ -4,7 +4,7 @@ description: 共有ハーネス(agent-harness)自体を変更したいときの�
 ---
 
 共有ハーネス(agent-harness リポジトリ)の中身(規約・skill・スクリプト・参照ドキュメント)を変更したいときの手順。
-プロジェクトに取り込む(pin を進める)だけなら `harness-sync` を使う。
+プロジェクトに取り込む(pin を進める)だけなら手順 4 だけを行う。
 
 ## 手順
 
@@ -34,8 +34,14 @@ description: 共有ハーネス(agent-harness)自体を変更したいときの�
 
 ### 4. マージ後、各プロジェクトで取り込む
 
-マージされたら、共有ハーネスを利用している各プロジェクトで `harness-sync` の「pin を進める」手順により取り込む(`.harness-version` の revision を上げる → sync 実行 → 差分を feature ブランチ + PR)。
+マージされたら、共有ハーネスを利用している各プロジェクトで取り込む。
+
+1. `develop` から feature ブランチを切る。
+2. `agent-harness update <rev>` を実行する(pin の更新と、`harness/`・生成物の再生成を一括で行う)。
+3. 差分を確認し(意図しない規約変更が混ざっていないか)、コミットして PR を作る(→ `pr-workflow`)。
+
 取り込みもプロジェクトごとの明示的な PR であり、自動では反映されない。
+`harness/` 配下と生成物(`AGENTS.md` / `CLAUDE.md` / skills ミラー / フック設定)は直接編集せず、乖離は CI の `agent-harness check` が検出する。
 
 ## 学びの括り出し(知見の昇格)
 

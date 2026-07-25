@@ -30,7 +30,7 @@
 
 - **指示の正はルート `AGENTS.md`**(生成物。ソースは `harness/AGENTS.md` とプロジェクトの `PROJECT.md`)。`CLAUDE.md` は `@AGENTS.md` の 1 行(生成物)であり、直接編集しない。
 - **手順は SKILL.md 標準形式(agentskills.io)の skill として書く。** ツール固有のコマンド機構(Claude Code の slash commands 等)に依存しない。skill の中でツール固有機能に触れる必要がある場合は「Claude Code では〜、それ以外では〜」の分岐を明記する。
-- **フックはハンドラを共有し、登録は sync が全ツール分を生成する。** ハンドラスクリプトは `harness/scripts/hooks/` に置き(stdin の JSON を読み、deny は `hookSpecificOutput.permissionDecision` で返す)、各ツールへの登録設定(Claude Code `.claude/settings.json` / Codex `.codex/hooks.json` / opencode `.opencode/plugins/agent-harness.js`)は harness-sync が生成・マージする。sync が管理するのは command に `harness/scripts/hooks/` を含むエントリだけで、プロジェクト独自のフックや permissions を同じ設定ファイルに追記しても保持される(opencode は別ファイルのプラグインとして追加する)。
+- **フックはハンドラを共有し、登録は sync が全ツール分を生成する。** ハンドラスクリプトは `harness/scripts/hooks/` に置き(stdin の JSON を読み、deny は `hookSpecificOutput.permissionDecision` で返す)、各ツールへの登録設定(Claude Code `.claude/settings.json` / Codex `.codex/hooks.json` / opencode `.opencode/plugins/agent-harness.js`)は sync(`agent-harness sync`)が生成・マージする。sync が管理するのは command に `harness/scripts/hooks/` を含むエントリだけで、プロジェクト独自のフックや permissions を同じ設定ファイルに追記しても保持される(opencode は別ファイルのプラグインとして追加する)。
 
 ## 3. ベンダー領域の編集禁止
 
@@ -103,7 +103,7 @@ skill の `SKILL.md` 本文は、skill 起動時にそのまま**コンテキス
 2. **索引に登録する。** [README.md](README.md) の一覧表に、ドキュメントと「読むべきタイミング」を追加する。一覧から漏れた文書は存在しないのと同じになる。
 3. **読まれる仕組み(トリガー)を用意する。** 受動的なポインタに頼らず、次のいずれかで発火させる。
    - **作業内容で発火する規約**(Issue/PR、design doc、テスト戦略など)→ その作業を `description` でトリガーする **skill**(`pr-workflow`・`design-doc` 系など)から参照させる。skill 本文は起動時にコンテキストへ読み込まれる。
-   - **特定のファイル操作で発火する規約**(ハーネス編集など)→ **フック**でリマインダーを注入する。ハンドラスクリプトは `harness/scripts/hooks/` で共有し、各ツールへの登録設定は harness-sync が生成する(§2)。フックが効かないツール・環境でも成立するよう、常時規約のポインタと索引の記述だけで足りる状態も保つ。
+   - **特定のファイル操作で発火する規約**(ハーネス編集など)→ **フック**でリマインダーを注入する。ハンドラスクリプトは `harness/scripts/hooks/` で共有し、各ツールへの登録設定は sync が生成する(§2)。フックが効かないツール・環境でも成立するよう、常時規約のポインタと索引の記述だけで足りる状態も保つ。
    - **事実上どの作業でも必要なゲート**だけ常時規約(AGENTS.md。常時ロード)に置く。
 4. **発火を確認する。** フックなら実際に動かして注入されること、skill なら description が想定タスクでトリガーすることを確かめる。
 

@@ -1,4 +1,4 @@
-// このファイルは生成物である。直接編集しない。再生成: node harness/scripts/sync/harness-sync.mjs
+// このファイルは生成物である。直接編集しない。再生成: agent-harness sync
 // 共有ハーネスのフックハンドラ(harness/scripts/hooks/)を opencode に接続するプラグイン。
 import { spawn } from "node:child_process"
 

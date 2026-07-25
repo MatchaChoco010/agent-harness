@@ -5,7 +5,7 @@
 //
 // 1. **生成物**(AGENTS.md / CLAUDE.md / .agents/skills/** / 共有ミラーの .claude/skills/<名> /
 //    .opencode/plugins/agent-harness.js)への編集は deny する。ソース(harness/AGENTS.md、
-//    PROJECT.md、harness/skills/)を編集して `node harness/scripts/sync/harness-sync.mjs` で再生成する。
+//    PROJECT.md、harness/skills/)を編集して `agent-harness sync` で再生成する。
 // 2. **ベンダー領域**(`harness/` 配下)への編集は、消費側プロジェクト(`.harness-version` を持つ)
 //    では deny する。共有ハーネスの変更は agent-harness リポジトリへの Issue + PR で行う
 //    (→ harness-update skill)。共有ハーネスのリポジトリ自身(pin を持たない)ではソース編集として
@@ -64,27 +64,27 @@ process.stdin.on('end', () => {
     // 1. 生成物の保護。
     if (rel === 'AGENTS.md' || rel === 'CLAUDE.md') {
       return { deny: `${rel} は生成物である。ソース(harness/AGENTS.md = 共有規約、PROJECT.md = プロジェクト固有規約)を編集し、` +
-        '`node harness/scripts/sync/harness-sync.mjs` で再生成すること。' }
+        '`agent-harness sync` で再生成すること。' }
     }
     if (rel.startsWith('.agents/skills/')) {
-      return { deny: `${rel} は .claude/skills/ からの生成ミラーである。ソース側を編集して harness-sync で再生成すること。` }
+      return { deny: `${rel} は .claude/skills/ からの生成ミラーである。ソース側を編集して \`agent-harness sync\` で再生成すること。` }
     }
     if (rel === '.opencode/plugins/agent-harness.js') {
-      return { deny: `${rel} は harness-sync が生成するフック接続プラグインである。ハンドラ本体(harness/scripts/hooks/)や ` +
-        '生成ロジック(harness/scripts/sync/harness-sync.mjs)を共有ハーネス側で変更し、再生成すること。' }
+      return { deny: `${rel} は sync が生成するフック接続プラグインである。ハンドラ本体(harness/scripts/hooks/)や ` +
+        '生成ロジック(CLI の src/)を共有ハーネス側で変更し、`agent-harness sync` で再生成すること。' }
     }
     const skillMatch = rel.match(/^\.claude\/skills\/([^/]+)\//)
     if (skillMatch && sharedSkills.includes(skillMatch[1])) {
       return { deny: `${rel} は共有 skill のミラーである。共有ハーネス(agent-harness リポジトリ)の harness/skills/${skillMatch[1]}/ を ` +
-        'Issue + PR で変更し、マージ後に pin を進めて harness-sync で取り込むこと(→ harness-update skill)。' }
+        'Issue + PR で変更し、マージ後に `agent-harness update <rev>` で取り込むこと(→ harness-update skill)。' }
     }
 
     // 2. ベンダー領域。
     if (rel === 'harness' || rel.startsWith('harness/')) {
       if (isConsumer) {
         return { deny: `${rel} は共有ハーネスのベンダーコピーであり、このリポジトリでは編集しない。` +
-          '共有ハーネスの変更は agent-harness リポジトリへの Issue + PR で行い、マージ後に .harness-version の revision を進めて ' +
-          '`node harness/scripts/sync/harness-sync.mjs` で取り込むこと(→ harness-update skill)。' +
+          '共有ハーネスの変更は agent-harness リポジトリへの Issue + PR で行い、マージ後に ' +
+          '`agent-harness update <rev>` で取り込むこと(→ harness-update skill)。' +
           'プロジェクト固有の内容なら PROJECT.md・.claude/skills/(共有ミラー以外)・プロジェクトの docs/ に書くこと。' }
       }
       return { remind: [
@@ -92,7 +92,7 @@ process.stdin.on('end', () => {
         `編集対象 ${rel} は共有ハーネスのソースである。変更前に harness/docs/editing.md に従うこと:`,
         '- 既存を読み、重複はマージし、整理してから書く。プロジェクト固有の語彙・事情を持ち込まない。',
         '- 参照ドキュメントや skill を新設・変更したら、「いつ読むか」を明示し、実際に読まれる仕組みまで用意する。',
-        '- 変更は Issue + ゲーティング PR で行い、マージはユーザー。生成物に影響する変更は harness-sync の再実行と --check を通すこと。',
+        '- 変更は Issue + ゲーティング PR で行い、マージはユーザー。生成物に影響する変更は `agent-harness sync` を再実行し `agent-harness check` を通すこと。',
         '</harness-edit-guard>',
       ].join('\n') }
     }

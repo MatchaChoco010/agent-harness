@@ -20,7 +20,7 @@ PR/Issue の作成・レビュー返信・コミットは「その操作に使�
 
 **複数行の本文は `--body-file`(ファイル)か stdin(`--body-file - <<'EOF'` / `-F body=@<file>`)で渡す。`--body "..."` の argv に複数行を載せない** — Git Bash → ネイティブ Windows exe の argv 変換で先頭1行しか渡らず本文が切れる(理由と手順は `harness/docs/git-and-pr.md`「複数行の本文は stdin で渡す」)。
 
-これを担保するため、`.claude/settings.json` の `permissions.deny` で素の `gh`(`Bash(gh:*)`)・`git commit`(`Bash(git commit:*)`)・`git merge --continue`(`Bash(git merge --continue:*)`)を禁止し、加えて PreToolUse フック `harness/scripts/hooks/bash-wrapper-guard.mjs` が検知して「代わりに `gh.mjs` / `commit.mjs` / `merge-commit.mjs` を使え」と理由つきで block する(deny がハードゲート、フックが案内。これらの設定は harness-sync が全ツール分を生成・マージする)。
+これを担保するため、`.claude/settings.json` の `permissions.deny` で素の `gh`(`Bash(gh:*)`)・`git commit`(`Bash(git commit:*)`)・`git merge --continue`(`Bash(git merge --continue:*)`)を禁止し、加えて PreToolUse フック `harness/scripts/hooks/bash-wrapper-guard.mjs` が検知して「代わりに `gh.mjs` / `commit.mjs` / `merge-commit.mjs` を使え」と理由つきで block する(deny がハードゲート、フックが案内。これらの設定は `agent-harness sync` が全ツール分を生成・マージする)。
 これらはエージェントが **Bash ツールで直接** 素のコマンドを叩くのを止めるだけで、ラッパーが内部で `gh` / `git` を child_process として起動する分には影響しない(permission もフックも Bash ツール呼び出しにかかり、スクリプト内のサブプロセス起動は対象外)。
 したがって「素のコマンドは禁止・ラッパー経由は許可」が両立する。
 

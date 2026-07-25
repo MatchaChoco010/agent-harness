@@ -5,11 +5,11 @@
 
 ## 提供するもの
 
-- **CLI**(`agent-harness`): プロジェクトへの導入(`init`)と更新(`update`)を行うコマンド。
+- **CLI**(`agent-harness`): プロジェクトへの導入(`init`)・更新(`update`)・再生成(`sync`)・検証(`check`)を行うコマンド。
 - **常時規約**(`harness/AGENTS.md`): どのプロジェクトでも変わらない standing なゲート(Git/PR 運用、markdown 規約、design doc ルールへのポインタなど)。
 - **参照ドキュメント**(`harness/docs/`): ハーネス編集の作法、Git/Issue/PR の詳細、markdown の書き方、design doc のルールとテンプレート。
 - **skills**(`harness/skills/`): SKILL.md 標準形式のワークフロー手順(design doc の執筆・レビュー、PR ワークフロー、日本語技術文書の規範など)。
-- **スクリプト**(`harness/scripts/`): bot 名義の GitHub 操作ヘルパー、フックハンドラ、同期スクリプト本体。
+- **スクリプト**(`harness/scripts/`): bot 名義の GitHub 操作ヘルパー、フックハンドラ。
 
 ## セットアップ
 
@@ -37,11 +37,12 @@ agent-harness init
 手順 1 の資格情報(App ID / Installation ID / 秘密鍵のパス)が未設定なら対話で入力を求め、`~/.config/agent-harness/env` に保存する(環境変数とリポジトリ直下の `.env` が優先される)。
 疎通確認は `node harness/scripts/gh/app-token.mjs --check`。
 
-初期化後は、`PROJECT.md` にプロジェクト固有の常時規約を書いて `node harness/scripts/sync/harness-sync.mjs` で `AGENTS.md` を再生成し、CI に `node harness/scripts/sync/harness-sync.mjs --check` を置く(例: [.github/workflows/harness-check.yml](.github/workflows/harness-check.yml))。
+初期化後は、`PROJECT.md` にプロジェクト固有の常時規約を書いて `agent-harness sync` で `AGENTS.md` を再生成する。
+CI には `agent-harness check` を置く(CLI は pin の revision で `cargo install --git https://github.com/MatchaChoco010/agent-harness --rev <revision>` として入れる)。
 
 ## 運用
 
-- **更新の取り込み**: 対象リポジトリで `agent-harness update`(最新)または `agent-harness update <rev>` を実行し、差分を PR にする。手順は `harness-sync` skill。
+- **更新の取り込み**: 対象リポジトリで `agent-harness update`(最新)または `agent-harness update <rev>` を実行し、差分を PR にする。
 - **共有ハーネス自体の変更**: このリポジトリへの Issue + PR で行い、マージ後に各プロジェクトが pin を進めて取り込む。手順は `harness-update` skill。
 - **プロジェクト固有の規約**: 各プロジェクトの `PROJECT.md` に書く。
 - **プロジェクト固有の skill**: `.claude/skills/` に共有ミラー以外の名前で置く。
