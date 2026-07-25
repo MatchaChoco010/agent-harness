@@ -12,6 +12,7 @@
 - `feature/hoge` で開発し、一通り完成したら `--no-ff` で `develop` にマージする。
 - `main` へのマージも `--no-ff` で行う。
 - **`main` へのマージはユーザーの確認を経てから行う。エージェントが勝手に `main` にマージしてはならない。**
+- **リポジトリの default branch は `develop` にする**(リポジトリのセットアップ時に GitHub の Settings で変更する)。PR 本文の `Closes #N` のような closing keyword は **default branch へのマージでのみ** Issue を自動クローズするため、default branch が `main` のままだと feature → develop のマージで Issue が閉じない。
 
 ## コミットメッセージ
 
