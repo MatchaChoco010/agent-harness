@@ -17,12 +17,12 @@
 //   node harness/scripts/sync/harness-sync.mjs                    # カレント = リポジトリルートで同期
 //   node harness/scripts/sync/harness-sync.mjs --target <dir>     # 対象リポジトリを明示指定
 //   node harness/scripts/sync/harness-sync.mjs --check            # 検証のみ。乖離があれば一覧を出して exit 1
-//   node harness/scripts/sync/harness-sync.mjs --source <clone>   # pin の fetch の代わりにローカル clone をソースにする(harness-init 用)
+//   node harness/scripts/sync/harness-sync.mjs --source <clone>   # pin の fetch の代わりにローカル clone をソースにする
 //
 // `.harness-version`(JSON、リポジトリルート):
 //   { "repository": "https://github.com/<owner>/agent-harness", "revision": "<tag または sha>" }
-//   共有ハーネスのリポジトリ自身では { "repository": "self" } とし、`harness/` をソースとして扱う
-//   (ベンダー展開をスキップし、生成物だけを再生成・検証する)。
+//   共有ハーネスのリポジトリ自身は pin を持たず、`--source .` で自分の `harness/` をソースにして
+//   生成物の再生成・検証を行う(ソースとベンダー先が同じ場所なのでベンダー展開は行われない)。
 //
 // 生成物と `harness/` 配下は手で編集しない。共有側を変えたいときは agent-harness リポジトリへ
 // PR を出し、マージ後に revision を進めて本スクリプトを再実行する(→ harness-update skill)。
@@ -46,23 +46,21 @@ function fail(msg) {
 
 // 対象リポジトリのルート。--target で明示するか、カレントディレクトリをルートとして扱う(探索はしない)。
 const ROOT = resolve(argValue('--target') ?? process.cwd())
-if (!existsSync(join(ROOT, '.harness-version'))) {
-  fail(`${ROOT} に .harness-version が無い。リポジトリルートで実行するか --target <dir> で指定すること(初期セットアップは harness-init.mjs)。`)
+const SOURCE = argValue('--source')
+if (!SOURCE && !existsSync(join(ROOT, '.harness-version'))) {
+  fail(`${ROOT} に .harness-version が無い。リポジトリルートで実行するか --target <dir> で指定すること(初期セットアップは agent-harness init)。`)
 }
-const pin = JSON.parse(readFileSync(join(ROOT, '.harness-version'), 'utf8'))
-const isSelf = pin.repository === 'self'
 
 // --- ソース harness/ の解決 -------------------------------------------------
 
-const SOURCE = argValue('--source')
 let srcHarness
 let tempDir = null
+let pin = null
 if (SOURCE) {
   srcHarness = join(resolve(SOURCE), 'harness')
   if (!existsSync(srcHarness)) fail(`--source に harness/ が存在しない: ${SOURCE}`)
-} else if (isSelf) {
-  srcHarness = join(ROOT, 'harness')
 } else {
+  pin = JSON.parse(readFileSync(join(ROOT, '.harness-version'), 'utf8'))
   if (!pin.repository || !pin.revision) fail('.harness-version には repository と revision が必要。')
   tempDir = mkdtempSync(join(tmpdir(), 'harness-sync-'))
   const git = (args) => {
@@ -80,8 +78,9 @@ if (SOURCE) {
 }
 
 // --- 期待される生成内容の計算 -----------------------------------------------
-
-const GENERATED_NOTE = '<!-- このファイルは生成物である。直接編集しない。ソース: harness/AGENTS.md(共有)+ PROJECT.md(プロジェクト固有)。再生成: node harness/scripts/sync/harness-sync.mjs -->'
+//
+// AGENTS.md / CLAUDE.md はセッションに常時読み込まれるため、生成物マーカー等の
+// 余計な行を入れない(生成物の保護は編集ガードと --check が担う)。
 
 function readOr(p, fallback) {
   return existsSync(p) ? readFileSync(p, 'utf8') : fallback
@@ -90,12 +89,12 @@ function readOr(p, fallback) {
 function expectedAgentsMd(harnessDir) {
   const shared = readFileSync(join(harnessDir, 'AGENTS.md'), 'utf8').trimEnd()
   const project = readOr(join(ROOT, 'PROJECT.md'), '').trimEnd()
-  const parts = [GENERATED_NOTE, '', shared]
+  const parts = [shared]
   if (project) parts.push('', project)
   return parts.join('\n') + '\n'
 }
 
-const EXPECTED_CLAUDE = `${GENERATED_NOTE}\n@AGENTS.md\n`
+const EXPECTED_CLAUDE = '@AGENTS.md\n'
 
 function listSkillDirs(skillsDir) {
   if (!existsSync(skillsDir)) return []
@@ -216,15 +215,15 @@ const drift = []
 // ベンダー展開前の共有 skill 一覧(上流で削除された skill のミラー掃除に使う)。
 const prevSharedSkills = listSkillDirs(join(ROOT, 'harness', 'skills'))
 
-// 1. harness/ のベンダー展開(self では対象外)。
-if (!isSelf) {
+// 1. harness/ のベンダー展開(ソースとベンダー先が同じ場所 = 共有ハーネスのリポジトリ自身では不要)。
+const harnessDir = join(ROOT, 'harness')
+if (resolve(srcHarness) !== resolve(harnessDir)) {
   if (CHECK) {
-    drift.push(...diffDir(srcHarness, join(ROOT, 'harness'), 'harness'))
+    drift.push(...diffDir(srcHarness, harnessDir, 'harness'))
   } else {
-    replaceDir(srcHarness, join(ROOT, 'harness'))
+    replaceDir(srcHarness, harnessDir)
   }
 }
-const harnessDir = join(ROOT, 'harness')
 
 // 2. AGENTS.md / 3. CLAUDE.md。
 const agents = expectedAgentsMd(harnessDir)
@@ -286,5 +285,5 @@ if (CHECK) {
   }
   console.log('harness-sync --check: OK')
 } else {
-  console.log(`harness-sync: 同期完了(共有 skill ${sharedSkills.length} 件${isSelf ? '、self モード' : `、pin = ${pin.revision}`})`)
+  console.log(`harness-sync: 同期完了(共有 skill ${sharedSkills.length} 件${pin ? `、pin = ${pin.revision}` : ''})`)
 }

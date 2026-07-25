@@ -15,7 +15,7 @@ pin はリポジトリルートの `.harness-version`(JSON)で表す。
 { "repository": "https://github.com/<owner>/agent-harness", "revision": "<tag または commit SHA>" }
 ```
 
-共有ハーネスのリポジトリ自身では `{ "repository": "self" }` とし、`harness/` をソースとして扱う(ベンダー展開をスキップし、生成物だけを再生成・検証する)。
+共有ハーネスのリポジトリ自身は pin を持たず、`--source .` を付けて自分の `harness/` をソースに生成物だけを再生成・検証する。
 
 ## 同期の実行
 
@@ -35,7 +35,7 @@ node harness/scripts/sync/harness-sync.mjs
 6. フック設定を各ツールに用意する(`.claude/settings.json` / `.codex/hooks.json` へ sync 管理エントリをマージ、`.opencode/plugins/agent-harness.js` を生成。プロジェクト独自のフック・permissions は保持される)。
 
 リポジトリルート以外から実行するときは `--target <dir>` で対象リポジトリを明示する(ルートの探索はしない)。
-プロジェクトへの初期導入は agent-harness の clone から `node harness/scripts/sync/harness-init.mjs <対象リポジトリのパス>` で行う(pin・PROJECT.md 雛形・資格情報の導入・初回 sync までを一括で行う。→ agent-harness リポジトリの README)。
+プロジェクトへの初期導入は CLI の `agent-harness init` で行う(pin・PROJECT.md 雛形・資格情報・初回 sync までを一括で行う。→ agent-harness リポジトリの README)。
 
 ## CI での検証
 
@@ -53,10 +53,9 @@ node harness/scripts/sync/harness-sync.mjs --check
 共有ハーネス側の変更がマージされたら、各プロジェクトで明示的に取り込む。
 
 1. `develop` から feature ブランチを切る。
-2. `.harness-version` の `revision` を新しい tag / SHA に上げる。
-3. `node harness/scripts/sync/harness-sync.mjs` を実行し、`harness/`・`AGENTS.md`・skills ミラーの差分を生成する。
-4. 差分を確認し(意図しない規約変更が混ざっていないか)、feature ブランチにコミットして PR を作る(→ `pr-workflow`)。
-5. ユーザーのレビュー・マージを経て取り込みが確定する。
+2. `.harness-version` の `revision` を新しい tag / SHA に上げ、`node harness/scripts/sync/harness-sync.mjs` を実行して差分を生成する(CLI があれば `agent-harness update <rev>` で両方を一度に行える)。
+3. 差分を確認し(意図しない規約変更が混ざっていないか)、feature ブランチにコミットして PR を作る(→ `pr-workflow`)。
+4. ユーザーのレビュー・マージを経て取り込みが確定する。
 
 ## 禁止事項
 

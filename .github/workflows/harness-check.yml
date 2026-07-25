@@ -20,4 +20,6 @@ jobs:
             node --check "$f"
           done
       - name: Generated files are in sync
-        run: node harness/scripts/sync/harness-sync.mjs --check
+        run: node harness/scripts/sync/harness-sync.mjs --check --source .
+      - name: CLI builds
+        run: cargo check --quiet

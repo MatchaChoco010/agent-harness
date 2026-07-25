@@ -1,6 +1,6 @@
 ---
 name: pr-workflow
-description: gh と GitHub を使った Issue/PR ワークフローの手順。バグを Issue でトラックし feature ブランチの PR で直す、Design Doc のレビューを開始してレビュー PR を作る(ready for review → reviewing)、Design Doc を親トラッキング Issue + Sub-issues に分割する、PR レビューコメントに対応する、PR のコンフリクトを解消する、マージ後にローカルを同期する、といった作業のときに使用する。「PR を作って」「design doc のレビューを開始して」「レビューコメントに対応して」「コンフリクトを解消して」「Issue を立てて」などの依頼で参照する。
+description: gh と GitHub を使った Issue/PR ワークフローの手順。バグを Issue でトラックし feature ブランチの PR で直す、Design Doc のレビューを開始してレビュー PR を作る(ready for review → reviewing)、大きな機能開発や Design Doc の実装を親トラッキング Issue + Sub-issues に分割する、PR レビューコメントに対応する、PR のコンフリクトを解消する、マージ後にローカルを同期する、といった作業のときに使用する。「PR を作って」「design doc のレビューを開始して」「レビューコメントに対応して」「コンフリクトを解消して」「Issue を立てて」などの依頼で参照する。
 ---
 
 `gh` コマンドと GitHub で Issue/PR をトラックする運用手順。
@@ -46,11 +46,11 @@ description: gh と GitHub を使った Issue/PR ワークフローの手順。�
 5. 複数バグを1 PR にまとめない。1バグでも原因が複数/順次なら PR を分ける。
 6. PR はレビュー単位。関係ない差分を混ぜない。一方で論理単位を曲げてまで小さく割らない(全 PR を見ないと追えない過剰分割は禁止)。
 
-## Design Doc の実装分割(親 Issue + Sub-issues)
+## 大きな機能開発の実装分割(親 Issue + Sub-issues)
 
-approve された design doc を実装するときは、レビューしやすい粒度に分割して**親トラッキング Issue + Sub-issues** にする。
+大きな機能開発(approve された design doc の実装を含む)は、レビューしやすい粒度に分割して**親トラッキング Issue + Sub-issues** にする(方針は `harness/docs/git-and-pr.md`「大きな機能開発は親 Issue + Sub-issues に分割する」)。
 
-1. 親トラッキング Issue を作り、本文に design doc へのリンクを張る。
+1. 親トラッキング Issue を作り、本文に作りたいものの全体像(design doc があればそのリンク)を書く。
 2. 各実装単位を Issue にし、親に Sub-issue としてぶら下げる。`gh` の sub-issue サブコマンドが使えない環境では GraphQL の `addSubIssue` を使う。
    ```sh
    # 親 #P に子 #C をぶら下げる例(node id を取得して mutation)

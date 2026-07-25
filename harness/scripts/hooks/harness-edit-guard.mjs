@@ -6,10 +6,10 @@
 // 1. **生成物**(AGENTS.md / CLAUDE.md / .agents/skills/** / 共有ミラーの .claude/skills/<名> /
 //    .opencode/plugins/agent-harness.js)への編集は deny する。ソース(harness/AGENTS.md、
 //    PROJECT.md、harness/skills/)を編集して `node harness/scripts/sync/harness-sync.mjs` で再生成する。
-// 2. **ベンダー領域**(`harness/` 配下)への編集は、消費側プロジェクト(.harness-version の
-//    repository が "self" でない)では deny する。共有ハーネスの変更は agent-harness リポジトリへの
-//    Issue + PR で行う(→ harness-update skill)。共有ハーネスのリポジトリ自身(repository = "self")
-//    ではソース編集として許可し、編集の作法(harness/docs/editing.md)のリマインダーを注入する。
+// 2. **ベンダー領域**(`harness/` 配下)への編集は、消費側プロジェクト(`.harness-version` を持つ)
+//    では deny する。共有ハーネスの変更は agent-harness リポジトリへの Issue + PR で行う
+//    (→ harness-update skill)。共有ハーネスのリポジトリ自身(pin を持たない)ではソース編集として
+//    許可し、編集の作法(harness/docs/editing.md)のリマインダーを注入する。
 // 3. その他のハーネス(PROJECT.md / .claude/settings.json / プロジェクト固有 skill)は
 //    非ブロックで editing.md のリマインダーを注入する。
 //
@@ -19,7 +19,7 @@
 //
 // OS 非依存の純 Node stdlib。
 
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 
 // apply_patch 形式のパッチ本文から対象パスを抽出する。
@@ -47,12 +47,9 @@ process.stdin.on('end', () => {
 
   const cwd = d.cwd || process.cwd()
 
-  let isSelf = false
+  // pin(.harness-version)を持つリポジトリは消費側、持たないリポジトリは共有ハーネスのソース。
+  const isConsumer = existsSync(path.join(cwd, '.harness-version'))
   let sharedSkills = []
-  try {
-    const pin = JSON.parse(readFileSync(path.join(cwd, '.harness-version'), 'utf8'))
-    isSelf = pin.repository === 'self'
-  } catch { /* pin なしのリポジトリでは共有関連の判定を行わない */ }
   try {
     const sharedDir = path.join(cwd, 'harness', 'skills')
     if (existsSync(sharedDir)) sharedSkills = readdirSync(sharedDir)
@@ -84,7 +81,7 @@ process.stdin.on('end', () => {
 
     // 2. ベンダー領域。
     if (rel === 'harness' || rel.startsWith('harness/')) {
-      if (!isSelf) {
+      if (isConsumer) {
         return { deny: `${rel} は共有ハーネスのベンダーコピーであり、このリポジトリでは編集しない。` +
           '共有ハーネスの変更は agent-harness リポジトリへの Issue + PR で行い、マージ後に .harness-version の revision を進めて ' +
           '`node harness/scripts/sync/harness-sync.mjs` で取り込むこと(→ harness-update skill)。' +

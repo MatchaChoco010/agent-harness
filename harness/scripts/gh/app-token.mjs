@@ -31,13 +31,13 @@ import { pathToFileURL } from 'node:url'
 
 const REFRESH_MARGIN_MS = 5 * 60 * 1000 // 失効 5 分前で作り直す
 
-// 資格情報ファイル(KEY=VALUE 形式)。harness-init が作成する。
+// グローバル既定の資格情報ファイル(KEY=VALUE 形式)。`agent-harness init` が作成する。
 export const CREDENTIALS_FILE = join(homedir(), '.config', 'agent-harness', 'env')
 
-function readCredentialsFile() {
+function readEnvFile(p) {
   try {
     const vars = {}
-    for (const line of readFileSync(CREDENTIALS_FILE, 'utf8').split(/\r?\n/)) {
+    for (const line of readFileSync(p, 'utf8').split(/\r?\n/)) {
       const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/)
       if (m && !line.trimStart().startsWith('#')) vars[m[1]] = m[2]
     }
@@ -47,9 +47,9 @@ function readCredentialsFile() {
   }
 }
 
-// 解決順: 環境変数 → 資格情報ファイル。
+// 解決順: 環境変数 → リポジトリ直下の .env(プロジェクト単位の上書き) → グローバル既定。
 function config() {
-  const file = readCredentialsFile()
+  const file = { ...readEnvFile(CREDENTIALS_FILE), ...readEnvFile(join(process.cwd(), '.env')) }
   const appId = process.env.BOT_GH_APP_ID || file.BOT_GH_APP_ID
   const installationId = process.env.BOT_GH_INSTALLATION_ID || file.BOT_GH_INSTALLATION_ID
   const keyPath = process.env.BOT_GH_APP_KEY || file.BOT_GH_APP_KEY
@@ -60,7 +60,7 @@ function config() {
   if (missing.length) {
     throw new Error(
       `GitHub App bot の設定が不足しています: ${missing.join(', ')}\n` +
-        `環境変数か ${CREDENTIALS_FILE} に設定する(harness-init が作成する)。\n` +
+        `環境変数・リポジトリ直下の .env・${CREDENTIALS_FILE} のいずれかに設定する(\`agent-harness init\` が対話でセットアップする)。\n` +
         '詳細: harness/scripts/gh/README.md',
     )
   }

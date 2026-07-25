@@ -1,0 +1,11 @@
+[package]
+name = "agent-harness"
+version = "0.1.0"
+edition = "2021"
+description = "共有ハーネスをプロジェクトへ導入・更新する CLI"
+repository = "https://github.com/MatchaChoco010/agent-harness"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[dependencies]
+serde_json = "1"

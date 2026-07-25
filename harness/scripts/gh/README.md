@@ -37,15 +37,15 @@ PR/Issue の作成・レビュー返信・コミットは「その操作に使�
 
 ## 設定(資格情報)
 
-`app-token.mjs` は資格情報を **環境変数 → `~/.config/agent-harness/env`(KEY=VALUE 形式)** の順で解決する。
-後者は agent-harness の clone 直下の `.env` から `harness-init.mjs` が導入する(→ agent-harness リポジトリの README「セットアップ」)。
+`app-token.mjs` は資格情報を **環境変数 → リポジトリ直下の `.env` → `~/.config/agent-harness/env`**(いずれも KEY=VALUE 形式)の順で解決する。
+グローバル側の `~/.config/agent-harness/env` は `agent-harness init` が対話で作成する(→ agent-harness リポジトリの README「セットアップ」)。
 
 - `BOT_GH_APP_ID` … App ID
 - `BOT_GH_INSTALLATION_ID` … Installation ID
 - `BOT_GH_APP_KEY` … 秘密鍵 `.pem` の絶対パス
 
 App ID / Installation ID は機密ではない。**機密は秘密鍵 `.pem` だけ**で、リポジトリ外に置く。
-プロジェクトごとに bot を切り替えたいときは、環境変数が優先されることを利用してそのプロジェクトだけ環境変数で上書きする(Claude Code なら `.claude/settings.local.json` の `"env"`)。
+プロジェクトごとに bot を切り替えたいときは、そのリポジトリ直下の `.env`(追跡対象外にする)か環境変数で上書きする。
 
 ## GitHub App の作り直し・再セットアップ
 
@@ -55,6 +55,6 @@ GitHub App(`matchachoco010-bot`)は GitHub の Web UI で作成する(`gh` に A
 2. 作成後ページの **App ID** を控える。
 3. **Generate a private key** で `.pem` を落とし、リポジトリ外に置く。
 4. 左メニュー **Install App** → 対象リポジトリのみにインストール。インストール後 URL `settings/installations/<数字>` の数字が **Installation ID**。
-5. 上記 3 値を agent-harness clone 直下の `.env` に設定して `harness-init.mjs` を実行し(→ agent-harness リポジトリの README「セットアップ」)、`node harness/scripts/gh/app-token.mjs --check` で疎通確認する。
+5. 上記 3 値を「設定(資格情報)」のいずれかの場所に設定し、`node harness/scripts/gh/app-token.mjs --check` で疎通確認する。
 
 秘密鍵を紛失/漏洩したら、App 設定ページで古い鍵を削除して新しい鍵を発行し、`BOT_GH_APP_KEY` を差し替える。
