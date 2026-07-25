@@ -121,5 +121,6 @@ skill、再利用スクリプト、design doc のルール、参照ドキュメ�
 ## マージと同期
 
 - **ゲーティング PR(実装コード・ハーネス変更・Design Doc のレビュー PR)はレビューが通ったら _ユーザーが_ マージする。エージェントは勝手にマージしない。** エージェントが `feature → develop` を `--no-ff` で PR なしマージしてよいのは、**レビュー前 Design Doc(`draft` / `ready for review`)の develop への集約 landing に限る**(上記「Design Doc のブランチ運用」)。`main` へのマージは常にユーザーの確認を経る。
+- **develop → main のマージは、ユーザーの指示を受けて GitHub の Merges API で行う**(コマンドは `pr-workflow`「develop → main のマージ」)。サーバ側で bot 名義のマージコミットが作られる。ローカルの `git merge` と `merge-commit.mjs` は使わない(`merge-commit.mjs` は develop / main への直接コミットを拒否する)。
 - PR がマージされたか等は `gh` でチェックする。
 - `git fetch` / `git pull` でローカルをリモートに追従させ続ける。
