@@ -6,4 +6,3 @@
 - このリポジトリでは `harness/` が編集対象のソースである(`.harness-version` は `self`)。編集は [harness/docs/editing.md](harness/docs/editing.md) に従い、Issue + feature ブランチ + ゲーティング PR で行う(マージはユーザー)。
 - `AGENTS.md`・`CLAUDE.md`・`.claude/skills/` の共有ミラー・`.agents/skills/` は生成物である。ソース(`harness/AGENTS.md`・`PROJECT.md`・`harness/skills/`)を編集し、`node harness/scripts/sync/harness-sync.mjs` で再生成する。
 - 検証コマンド: `node harness/scripts/sync/harness-sync.mjs --check` と、`harness/scripts/**/*.mjs` の `node --check`。
-- 学びの記録は `.learnings/` に行う(このリポジトリ自身の運用で得た学びのみ。利用側プロジェクトの学びはそれぞれのリポジトリに残る)。

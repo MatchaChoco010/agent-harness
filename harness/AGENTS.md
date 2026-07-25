@@ -53,7 +53,7 @@ Markdown は **文の途中で見た目(行の折り返し)のためだけに改
 共有 skill は `harness/` からミラーされ、プロジェクト固有 skill はプロジェクト側に置く。
 skill の編集は [harness/docs/editing.md](harness/docs/editing.md) に従う。
 
-**学びの記録(standing)**: **ユーザーに是正されたら、または非自明なエラーを調査して解決したら、その場で `.learnings/` に記録する**(是正・洞察は `LEARNINGS.md`、コマンド/API 失敗は `ERRORS.md`、検証付き回復は `HEALS.md`。形式は `self-improvement` / `self-healing` skill)。リマインダーのフックは促すだけで自動記録しないので、記録は**そのターンの成果物**として扱い「後で」に回さない。恒久ルール化すべき学びは常時規約や該当 skill へ昇格する(status: promoted)。昇格先が共有ハーネスかプロジェクト固有かは [harness/docs/editing.md](harness/docs/editing.md)「共有ハーネスかプロジェクト固有かの判断」に従う。
+作業で得た学び・知見を恒久ルールや skill へ昇格するときは、昇格先が共有ハーネスかプロジェクト固有かを [harness/docs/editing.md](harness/docs/editing.md)「共有ハーネスかプロジェクト固有かの判断」に従って決める(学びの記録の仕組み自体はプロジェクトごとに定めてよく、この共有ハーネスは提供しない)。
 
 ## ハーネスの編集
 
