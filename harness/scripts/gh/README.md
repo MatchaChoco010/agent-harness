@@ -37,7 +37,7 @@ PR/Issue の作成・レビュー返信・コミットは「その操作に使�
 
 ## 設定(環境変数)
 
-`.claude/settings.local.json` の `"env"` に置く(このファイルは追跡対象外・マシンローカル)。
+Claude Code では `.claude/settings.local.json` の `"env"` に置く(このファイルは追跡対象外・マシンローカル)。Codex 等ほかのツールへの渡し方は agent-harness リポジトリの README「資格情報を環境変数で渡す」を参照。
 
 ```json
 {
