@@ -15,7 +15,7 @@ design doc の中身のルール(何を書くか・高度・簡潔さ・自己�
 1. `harness/docs/design/README.md` — ルール全体。
 2. `harness/docs/design/template.md` — 章立てと各セクションの書き方。
 
-あわせて、プロジェクトに設計原則のドキュメントがあればそれと、`docs/design/INDEX.md`(既存 doc と最新番号)、`harness/skills/japanese-tech-writing/SKILL.md`(日本語文章規範。一文一行)を読む。
+あわせて、プロジェクトに設計原則のドキュメントがあればそれと、`docs/design/INDEX.md`(既存 doc と最新番号)、`harness/skills/japanese-tech-writing/SKILL.md`(日本語文章規範。一文一行)、`harness/docs/japanese.md`(日本語の言葉選び・表現)を読む。
 このスキルが指示するのは **執筆の進め方(ワークフロー)** だけである。
 
 ## 執筆の原則

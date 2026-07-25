@@ -10,6 +10,8 @@ description: gh と GitHub を使った Issue/PR ワークフローの手順。�
 
 **GitHub 操作もコミットも bot 名義で行う。** Issue/PR の作成・レビュー返信・`gh api` は素の `gh` ではなく `node harness/scripts/gh/gh.mjs <gh の引数...>` を通す(bot アカウントの token を注入するラッパー。素の `gh` はユーザー個人名義になる)。コミットも `git commit` の代わりに `node harness/scripts/gh/commit.mjs "メッセージ"` を使う(`git add` で対象を選んでから実行。bot 名義かつ Verified になる。素の `git commit` はユーザー個人名義)。以下のコマンド例はすべてこの前提。設定(環境変数 `BOT_GH_APP_ID` / `BOT_GH_INSTALLATION_ID` / `BOT_GH_APP_KEY`)と仕組みは `harness/scripts/gh/README.md`。
 
+**日本語の本文を書く前に**: Issue/PR の本文・コメント・レビュー返信・コミットメッセージの日本語は `harness/docs/japanese.md`(言葉選び・表現の規範)に従う。このセッションで未読なら、本文を書く前に `Read` する。
+
 **本文の渡し方(重要)**: Issue/PR/コメントの**複数行本文は `--body-file -`(stdin ヒアドキュメント)かファイル**で渡す。`--body "..."` の argv に複数行を載せると、シェルからネイティブ実行ファイルへの argv 変換で**先頭1行しか渡らず本文が切れる**環境がある(理由と他の渡し方は `harness/docs/git-and-pr.md` の「複数行の本文は stdin で渡す」を `Read`)。投稿後は `--jq '.body | length'` で切れていないか確認する。
 
 ## ブランチ運用(前提)
