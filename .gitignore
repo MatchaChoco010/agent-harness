@@ -2,9 +2,9 @@
 .claude/settings.local.json
 /target/
 
-# --- agent-harness sync: ここから(このブロックは sync が管理する。直接編集しない) ---
-# bot(GitHub App)の資格情報
+# --- agent-harness sync: managed block, do not edit ---
+# bot (GitHub App) credentials
 .env
-# harness/scripts の依存
+# dependencies of harness/scripts
 harness/scripts/node_modules/
-# --- agent-harness sync: ここまで ---
+# --- agent-harness sync: end of managed block ---

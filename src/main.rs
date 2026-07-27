@@ -36,13 +36,14 @@ const CRED_KEYS: [&str; 3] = ["BOT_GH_APP_ID", "BOT_GH_INSTALLATION_ID", "BOT_GH
 const HOOK_MARKER: &str = "harness/scripts/hooks/";
 
 /// .gitignore のうち sync が管理する範囲を囲むマーカー。この外側は書き換えない。
-const GITIGNORE_BEGIN: &str = "# --- agent-harness sync: ここから(このブロックは sync が管理する。直接編集しない) ---";
-const GITIGNORE_END: &str = "# --- agent-harness sync: ここまで ---";
+/// .gitignore へ書き出す文言は英語で統一する。
+const GITIGNORE_BEGIN: &str = "# --- agent-harness sync: managed block, do not edit ---";
+const GITIGNORE_END: &str = "# --- agent-harness sync: end of managed block ---";
 
 /// ハーネス自身が持ち込む、追跡してはいけないファイル(コメント, パターン)。
 const GITIGNORE_ENTRIES: [(&str, &str); 2] = [
-    ("bot(GitHub App)の資格情報", ".env"),
-    ("harness/scripts の依存", "harness/scripts/node_modules/"),
+    ("bot (GitHub App) credentials", ".env"),
+    ("dependencies of harness/scripts", "harness/scripts/node_modules/"),
 ];
 
 const USAGE: &str = "使い方:\n  agent-harness init [--revision <rev>]   対象リポジトリのルートで実行し、共有ハーネスを導入する(rev 省略時は main の先端)\n  agent-harness update [<rev>]            pin を進めて同期する(rev 省略時は main の先端)\n  agent-harness sync [--source <dir>]     pin(または --source のローカルソース)から展開・生成し直す\n  agent-harness check [--source <dir>]    生成物の検証のみ。乖離があれば一覧を出して exit 1";
