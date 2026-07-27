@@ -15,6 +15,10 @@ markdown を書く・編集するときは [harness/docs/markdown.md](harness/do
 日本語を書くときは、書く場所(ドキュメント・PR/Issue・コメント・コミットメッセージ)を問わず [harness/docs/japanese.md](harness/docs/japanese.md)(言葉選び・表現)に従う。
 まとまった技術文書の段落構成は `japanese-tech-writing` skill に従う。
 
+## コードコメント
+
+ソースコードにコメントを書く・編集するときは [harness/docs/code-comments.md](harness/docs/code-comments.md)(コメントに何を書くか)に従う。
+
 ## Git・Issue・PR(常時のゲート)
 
 作業は **Issue + `feature/hoge` ブランチ + PR** でトラックする。
