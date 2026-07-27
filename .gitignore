@@ -1,5 +1,10 @@
 /scratch/
 .claude/settings.local.json
-harness/scripts/node_modules/
-.env
 /target/
+
+# --- agent-harness sync: managed block, do not edit ---
+# bot (GitHub App) credentials
+.env
+# dependencies of harness/scripts
+harness/scripts/node_modules/
+# --- agent-harness sync: end of managed block ---

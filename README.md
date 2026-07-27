@@ -34,6 +34,8 @@ agent-harness init
 ```
 
 これが共有ハーネスを取得し、`.harness-version`(pin)・`PROJECT.md` の雛形・ベンダーコピー `harness/`・生成物(`AGENTS.md` / `CLAUDE.md` / skills ミラー / 各ツールのフック設定)を配置する。
+`.gitignore` には、ハーネス由来の無視項目(bot の資格情報を置く `.env` と `harness/scripts/node_modules/`)を入れたブロックを追記する。
+ブロックはマーカーで囲まれ、`sync` はその範囲だけを更新するので、プロジェクト固有の記述はブロックの外にそのまま書いてよい。
 手順 1 の資格情報(App ID / Installation ID / 秘密鍵のパス)が未設定なら対話で入力を求め、`~/.config/agent-harness/env` に保存する(環境変数とリポジトリ直下の `.env` が優先される)。
 疎通確認は `node harness/scripts/gh/app-token.mjs --check`。
 
