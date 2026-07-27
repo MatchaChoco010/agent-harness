@@ -11,6 +11,8 @@
 //!   6. フック設定            … ハンドラ(harness/scripts/hooks/)を各ツールに登録する設定
 //!                              (.claude/settings.json / .codex/hooks.json へのマージ、
 //!                               .opencode/plugins/agent-harness.js の生成)
+//!   7. .gitignore            … ハーネス由来の無視項目だけを入れた管理ブロックの追記・更新
+//!                              (ブロック外のプロジェクト固有の記述には触れない)
 //!
 //! AGENTS.md / CLAUDE.md はセッションに常時読み込まれるため、生成物マーカー等の余計な行を
 //! 入れない(生成物の保護は編集ガードのフックと `check` が担う)。
@@ -32,6 +34,17 @@ const CRED_KEYS: [&str; 3] = ["BOT_GH_APP_ID", "BOT_GH_INSTALLATION_ID", "BOT_GH
 
 /// sync が管理するフックエントリの識別子(command にこれを含むエントリだけを差し替える)。
 const HOOK_MARKER: &str = "harness/scripts/hooks/";
+
+/// .gitignore のうち sync が管理する範囲を囲むマーカー。この外側は書き換えない。
+/// .gitignore へ書き出す文言は英語で統一する。
+const GITIGNORE_BEGIN: &str = "# --- agent-harness sync: managed block, do not edit ---";
+const GITIGNORE_END: &str = "# --- agent-harness sync: end of managed block ---";
+
+/// ハーネス自身が持ち込む、追跡してはいけないファイル(コメント, パターン)。
+const GITIGNORE_ENTRIES: [(&str, &str); 2] = [
+    ("bot (GitHub App) credentials", ".env"),
+    ("dependencies of harness/scripts", "harness/scripts/node_modules/"),
+];
 
 const USAGE: &str = "使い方:\n  agent-harness init [--revision <rev>]   対象リポジトリのルートで実行し、共有ハーネスを導入する(rev 省略時は main の先端)\n  agent-harness update [<rev>]            pin を進めて同期する(rev 省略時は main の先端)\n  agent-harness sync [--source <dir>]     pin(または --source のローカルソース)から展開・生成し直す\n  agent-harness check [--source <dir>]    生成物の検証のみ。乖離があれば一覧を出して exit 1";
 
@@ -260,6 +273,17 @@ fn run_sync(root: &Path, source: Option<&Path>, check: bool) -> Result<ExitCode,
         }
     }
 
+    // 7. .gitignore。ハーネス由来の項目を管理ブロックとして持たせる(ブロック外はプロジェクトの領域)。
+    let gitignore = root.join(".gitignore");
+    let expected_gitignore = merged_gitignore(&gitignore);
+    if check {
+        if fs::read_to_string(&gitignore).ok().as_deref() != Some(expected_gitignore.as_str()) {
+            drift.push(".gitignore".into());
+        }
+    } else {
+        fs::write(&gitignore, &expected_gitignore).map_err(|e| e.to_string())?;
+    }
+
     if let Some(tmp) = temp_dir {
         let _ = fs::remove_dir_all(tmp);
     }
@@ -344,6 +368,45 @@ fn merged_hook_config(path: &Path, entries: &serde_json::Value, deny: Option<&[&
     *pre = serde_json::Value::Array(merged);
 
     format!("{}\n", serde_json::to_string_pretty(&obj).unwrap())
+}
+
+/// 既存の .gitignore に管理ブロックをマージした期待内容を返す(冪等)。
+///
+/// ブロックが無ければ末尾に足し、あればその範囲だけを差し替える。ブロック外の記述はそのまま残す
+/// (.gitignore はプロジェクトが自分で書き足す領域でもあるため、ファイルごと所有しない)。
+fn merged_gitignore(path: &Path) -> String {
+    let mut block = String::from(GITIGNORE_BEGIN);
+    for (note, pattern) in GITIGNORE_ENTRIES {
+        block.push_str(&format!("\n# {note}\n{pattern}"));
+    }
+    block.push('\n');
+    block.push_str(GITIGNORE_END);
+
+    let existing = fs::read_to_string(path).unwrap_or_default();
+    let bounds = match (existing.find(GITIGNORE_BEGIN), existing.find(GITIGNORE_END)) {
+        (Some(start), Some(end)) if end > start => Some((start, end + GITIGNORE_END.len())),
+        _ => None,
+    };
+    let (head, tail) = match bounds {
+        Some((start, end)) => (&existing[..start], &existing[end..]),
+        None => (existing.as_str(), ""),
+    };
+
+    let mut out = String::new();
+    let head = head.trim_end();
+    if !head.is_empty() {
+        out.push_str(head);
+        out.push_str("\n\n");
+    }
+    out.push_str(&block);
+    out.push('\n');
+    let tail = tail.trim();
+    if !tail.is_empty() {
+        out.push('\n');
+        out.push_str(tail);
+        out.push('\n');
+    }
+    out
 }
 
 // --- pin と取得 -------------------------------------------------------------
