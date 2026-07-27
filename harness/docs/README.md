@@ -10,6 +10,7 @@
 | [editing.md](editing.md) | ハーネス編集の作法・共有/プロジェクト固有の判断・多ツール対応・ベンダー領域の編集禁止・常時規約の整理の規律・読まれる仕組みの作り方 | 常時規約(AGENTS.md のソース)/ skill / `harness/docs/` / design doc のルール / スクリプトを**編集・新設するとき(必須)** |
 | [markdown.md](markdown.md) | Markdown 執筆の作法(見た目のための行中改行を入れない、全 markdown 共通) | **markdown を書く・編集するとき(design doc・harness・README・SKILL.md など全 markdown)** |
 | [japanese.md](japanese.md) | 日本語の言葉選びと表現の規範 | **日本語の文章を書くとき(design doc・PR/Issue の本文とコメント・コミットメッセージ・コードコメント)** |
+| [code-comments.md](code-comments.md) | コードコメントに何を書くか | **ソースコードのコメントを書く・編集するとき** |
 | [git-and-pr.md](git-and-pr.md) | ブランチ運用・コミット・Issue/PR・Design Doc のブランチ運用とレビュー PR・実装分割・レビュー対応・同期 | Git の分岐・コミット・Issue/PR 作業をするとき。`gh` の具体コマンドは `pr-workflow` skill |
 | [scripts.md](scripts.md) | 再利用スクリプトは二層(`harness/scripts/` / プロジェクトの `scripts/`)に Node で・一時検証スクリプトは残さない | スクリプトを書く/置き場所を決めるとき |
 | [design/README.md](design/README.md) | design doc のルール(書く対象・高度・自己完結・status・レビュープロセス) | design doc を書く・レビューするとき(必須) |
