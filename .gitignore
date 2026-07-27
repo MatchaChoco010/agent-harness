@@ -1,5 +1,10 @@
 /scratch/
 .claude/settings.local.json
-harness/scripts/node_modules/
-.env
 /target/
+
+# --- agent-harness sync: ここから(このブロックは sync が管理する。直接編集しない) ---
+# bot(GitHub App)の資格情報
+.env
+# harness/scripts の依存
+harness/scripts/node_modules/
+# --- agent-harness sync: ここまで ---
