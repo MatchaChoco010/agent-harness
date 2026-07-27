@@ -17,9 +17,7 @@ markdown を書く・編集するときは [harness/docs/markdown.md](harness/do
 
 ## コードコメント
 
-コードコメントに書いてよいのは、コードだけでは読み取れない意図に限る。
-design doc に書いた設計判断・根拠・トレードオフをコードのコメントへ書き写さない。
-判断基準・doc に触れてよい場合・例は [harness/docs/code-comments.md](harness/docs/code-comments.md) に従う。
+ソースコードにコメントを書く・編集するときは [harness/docs/code-comments.md](harness/docs/code-comments.md)(コメントに何を書くか)に従う。
 
 ## Git・Issue・PR(常時のゲート)
 
