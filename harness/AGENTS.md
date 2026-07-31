@@ -24,6 +24,7 @@ markdown を書く・編集するときは [harness/docs/markdown.md](harness/do
 作業は **Issue + `feature/hoge` ブランチ + PR** でトラックする。
 **ゲーティング PR のマージはユーザーが行う。エージェントは `develop` / `main` に勝手にマージしない**(唯一の例外であるレビュー前 Design Doc の develop 集約 landing を含め、[harness/docs/git-and-pr.md](harness/docs/git-and-pr.md) が正)。
 ブランチ運用・Issue/PR の切り方・コミットメッセージ・レビュー対応は同ドキュメントに従い、GitHub 操作のコマンドは `pr-workflow` skill を使う。
+**PR を出す前に、差分に入る日本語(コードコメント・ドキュメント)と本文を規範に照らして見直す**(手順は `pr-workflow` skill「PR を出す前に日本語を見直す」)。
 
 ## エージェント向けスクリプト
 

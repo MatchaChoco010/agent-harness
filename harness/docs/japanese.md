@@ -55,4 +55,4 @@ design doc・参照ドキュメント・README・skill 本文・PR/Issue の本�
 
 - design doc・ドキュメント・skill 本文の執筆と推敲: design-doc 系 skill と `japanese-tech-writing` skill が参照を指示する。
 - PR/Issue の本文・コメント・レビュー返信・コミットメッセージ: `pr-workflow` skill が参照を指示し、bot ラッパーの実行時にフックが読むよう促す。
-- ソースコードのコメント: 上記いずれかの作業に付随して書くことが大半なので専用のフックは置かないが、適用範囲には含まれる。
+- ソースコードのコメント: 書くときの専用のフックは置かない。PR を出す前の見直しで、差分に入ったコメントも読み直す(→ [git-and-pr.md](git-and-pr.md)「PR を出す前に日本語を見直す」)。

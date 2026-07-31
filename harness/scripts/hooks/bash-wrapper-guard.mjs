@@ -14,6 +14,8 @@
 // また、bot ラッパーで Issue/PR/コメント/コミットの本文を書く操作(gh.mjs issue/pr、
 // pr-reply.mjs、commit.mjs、merge-commit.mjs)を検知したら、日本語の言葉選び・表現の規範
 // (harness/docs/japanese.md)を読むよう非ブロックのリマインダーを注入する。
+// PR の作成だけは、本文に加えて差分に入った日本語(コードコメント・ドキュメント)の
+// 見直しを促す。
 //
 // OS 非依存の純 Node stdlib。起動は
 // `node "${CLAUDE_PROJECT_DIR}/scripts/hooks/bash-wrapper-guard.mjs"`。
@@ -40,6 +42,15 @@ const GIT_MERGE_CONTINUE_RE = new RegExp(
 )
 // bot ラッパーで日本語の本文を書く操作(Issue/PR の作成・コメント・返信、コミットメッセージ)。
 const JAPANESE_POST_RE = /gh\.mjs\s+(?:issue|pr)\b|gh[\\/](?:pr-reply|commit|merge-commit)\.mjs/
+const PR_CREATE_RE = /gh\.mjs\s+pr\s+create\b/
+
+const WRITING_REMINDER =
+  'これから書く Issue/PR/コメント/コミットメッセージの日本語は harness/docs/japanese.md(言葉選び・表現の規範)に従う。' +
+  'このセッションで未読なら、先に Read してから本文を書くこと。'
+const PR_REMINDER =
+  'PR を出す前に、差分に入る日本語を見直すこと。対象は変更したコードのコメント・ドキュメント・design doc と、PR 本文である。' +
+  '規範は harness/docs/japanese.md(言葉選び・表現)・code-comments.md(コメントに何を書くか)・markdown.md で、' +
+  'このセッションで未読なら先に Read する。手順は pr-workflow skill「PR を出す前に日本語を見直す」。'
 
 let input = ''
 process.stdin.setEncoding('utf8')
@@ -56,10 +67,11 @@ process.stdin.on('end', () => {
   const hitsMergeContinue = GIT_MERGE_CONTINUE_RE.test(command)
   if (!hitsGh && !hitsGitCommit && !hitsMergeContinue) {
     if (JAPANESE_POST_RE.test(command)) {
+      const body = PR_CREATE_RE.test(command) ? PR_REMINDER : WRITING_REMINDER
       process.stdout.write(JSON.stringify({
         hookSpecificOutput: {
           hookEventName: 'PreToolUse',
-          additionalContext: '<japanese-writing-reminder>これから書く Issue/PR/コメント/コミットメッセージの日本語は harness/docs/japanese.md(言葉選び・表現の規範)に従う。このセッションで未読なら、先に Read してから本文を書くこと。</japanese-writing-reminder>',
+          additionalContext: `<japanese-writing-reminder>${body}</japanese-writing-reminder>`,
         },
       }) + '\n')
     }
