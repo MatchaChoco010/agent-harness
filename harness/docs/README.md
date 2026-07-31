@@ -11,7 +11,7 @@
 | [markdown.md](markdown.md) | Markdown 執筆の作法(見た目のための行中改行を入れない、全 markdown 共通) | **markdown を書く・編集するとき(design doc・harness・README・SKILL.md など全 markdown)** |
 | [japanese.md](japanese.md) | 日本語の言葉選びと表現の規範 | **日本語の文章を書くとき(design doc・PR/Issue の本文とコメント・コミットメッセージ・コードコメント)** |
 | [code-comments.md](code-comments.md) | コードコメントに何を書くか | **ソースコードのコメントを書く・編集するとき** |
-| [git-and-pr.md](git-and-pr.md) | ブランチ運用・コミット・Issue/PR・Design Doc のブランチ運用とレビュー PR・実装分割・レビュー対応・同期 | Git の分岐・コミット・Issue/PR 作業をするとき。`gh` の具体コマンドは `pr-workflow` skill |
+| [git-and-pr.md](git-and-pr.md) | ブランチ運用・コミット・Issue/PR・PR を出す前の日本語の見直し・Design Doc のブランチ運用とレビュー PR・実装分割・レビュー対応・同期 | Git の分岐・コミット・Issue/PR 作業をするとき。`gh` の具体コマンドは `pr-workflow` skill |
 | [scripts.md](scripts.md) | 再利用スクリプトは二層(`harness/scripts/` / プロジェクトの `scripts/`)に Node で・一時検証スクリプトは残さない | スクリプトを書く/置き場所を決めるとき |
 | [design/README.md](design/README.md) | design doc のルール(書く対象・高度・自己完結・status・レビュープロセス) | design doc を書く・レビューするとき(必須) |
 | [design/template.md](design/template.md) | design doc のテンプレート | design doc を新規に書き始めるとき |
@@ -23,6 +23,7 @@
 - **ハーネス編集**: ハーネスのファイルを編集しようとしたら editing.md と本索引を読むよう促す。フック機構のあるツールでは PreToolUse 相当のフック(ハンドラは `harness/scripts/hooks/`、登録は各プロジェクト・各ツールの設定ファイル)で注入する。
 - **素の `gh` / `git commit` の禁止**: これらをシェルツールで直接叩いたら、permission 設定とフックが block し、bot 名義になる `harness/scripts/gh/gh.mjs` / `commit.mjs` を使うよう案内する(→ [git-and-pr.md](git-and-pr.md))。
 - **日本語の本文の投稿**: bot ラッパーで Issue/PR/コメント/コミットの本文を書く操作(`gh.mjs` の issue/pr 系・`pr-reply.mjs`・`commit.mjs`)をフックが検知し、[japanese.md](japanese.md) を読むよう促す。design doc・原稿の執筆では skill(design-doc 系・`japanese-tech-writing`)が参照を指示する。
+- **PR を出す前の日本語の見直し**: PR の作成をフックが検知し、差分に入ったコードコメントとドキュメントを [japanese.md](japanese.md)・[code-comments.md](code-comments.md)・[markdown.md](markdown.md) に照らして見直すよう促す。手順は `pr-workflow` skill が持ち、規約は [git-and-pr.md](git-and-pr.md) が定める。
 - **作業トリガーの規約**: 作業内容で発火する規約(Issue/PR、design doc など)は、その作業を description でトリガーする skill(`pr-workflow`、`design-doc` 系)から参照させる。
 - **常時必要なゲート**: 事実上どの作業でも関わるゲートだけ常時規約(AGENTS.md)に置く。
 

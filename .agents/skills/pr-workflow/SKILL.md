@@ -10,7 +10,7 @@ description: gh と GitHub を使った Issue/PR ワークフローの手順。�
 
 **GitHub 操作もコミットも bot 名義で行う。** Issue/PR の作成・レビュー返信・`gh api` は素の `gh` ではなく `node harness/scripts/gh/gh.mjs <gh の引数...>` を通す(bot アカウントの token を注入するラッパー。素の `gh` はユーザー個人名義になる)。コミットも `git commit` の代わりに `node harness/scripts/gh/commit.mjs "メッセージ"` を使う(`git add` で対象を選んでから実行。bot 名義かつ Verified になる。素の `git commit` はユーザー個人名義)。以下のコマンド例はすべてこの前提。設定(環境変数 `BOT_GH_APP_ID` / `BOT_GH_INSTALLATION_ID` / `BOT_GH_APP_KEY`)と仕組みは `harness/scripts/gh/README.md`。
 
-**日本語の本文を書く前に**: Issue/PR の本文・コメント・レビュー返信・コミットメッセージの日本語は `harness/docs/japanese.md`(言葉選び・表現の規範)に従う。このセッションで未読なら、本文を書く前に `Read` する。
+**日本語を書く前と、PR を出す前に**: 本文・コメント・コードコメント・ドキュメントの日本語は `harness/docs/japanese.md`(言葉選び・表現の規範)に従う。書く前にこのセッションで未読なら `Read` し、PR を出す前に下記「PR を出す前に日本語を見直す」を必ず通す。
 
 **本文の渡し方(重要)**: Issue/PR/コメントの**複数行本文は `--body-file -`(stdin ヒアドキュメント)かファイル**で渡す。`--body "..."` の argv に複数行を載せると、シェルからネイティブ実行ファイルへの argv 変換で**先頭1行しか渡らず本文が切れる**環境がある(理由と他の渡し方は `harness/docs/git-and-pr.md` の「複数行の本文は stdin で渡す」を `Read`)。投稿後は `--jq '.body | length'` で切れていないか確認する。
 
@@ -37,7 +37,8 @@ description: gh と GitHub を使った Issue/PR ワークフローの手順。�
    git add <対象>
    node harness/scripts/gh/commit.mjs "Summary line in imperative mood"
    ```
-4. Issue に紐づけて PR を作る(`Closes #N` で自動クローズ。本文は stdin)。
+4. 差分の日本語を見直す(下記「PR を出す前に日本語を見直す」)。直しが出たらコミットしてから次へ進む。
+5. Issue に紐づけて PR を作る(`Closes #N` で自動クローズ。本文は stdin)。
    ```sh
    node harness/scripts/gh/gh.mjs pr create --base develop --title "..." --body-file - <<'EOF'
    Closes #<Issue番号>
@@ -45,8 +46,23 @@ description: gh と GitHub を使った Issue/PR ワークフローの手順。�
    説明本文。
    EOF
    ```
-5. 複数バグを1 PR にまとめない。1バグでも原因が複数/順次なら PR を分ける。
-6. PR はレビュー単位。関係ない差分を混ぜない。一方で論理単位を曲げてまで小さく割らない(全 PR を見ないと追えない過剰分割は禁止)。
+6. 複数バグを1 PR にまとめない。1バグでも原因が複数/順次なら PR を分ける。
+7. PR はレビュー単位。関係ない差分を混ぜない。一方で論理単位を曲げてまで小さく割らない(全 PR を見ないと追えない過剰分割は禁止)。
+
+## PR を出す前に日本語を見直す
+
+PR を作る前に必ず通す。design doc のレビュー PR とハーネスの PR でも同じく通す。
+
+1. 規範を `Read` する(このセッションで未読のもの。記憶で済ませない)。
+   - `harness/docs/japanese.md` — 言葉選びと表現。すべての日本語に適用される。
+   - `harness/docs/code-comments.md` — コメントに何を書くか(コードを触った PR のとき)。
+   - `harness/docs/markdown.md` — markdown の書き方(markdown を触った PR のとき)。
+2. 差分に入る日本語を通しで読む。
+   ```sh
+   git diff develop...HEAD
+   ```
+3. コードコメントは 1 つずつ「これを消したら読む人は何を失うか」を問う。失うものがコードと design doc から得られるなら消す。
+4. 直した内容をコミットしてから PR を作る。
 
 ## 大きな機能開発の実装分割(親 Issue + Sub-issues)
 
