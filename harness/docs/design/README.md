@@ -375,8 +375,8 @@ design doc は **書き上げて develop に集約し、ユーザーがレビュ
 6. 承認後の実装は [../git-and-pr.md](../git-and-pr.md)「Design Doc に紐づく実装」に従う。
 7. 後日設計を変えるときは新しい番号の doc で上書きの意思決定を記録する。
 
-エージェントが PR なしで develop にマージしてよいのは、上記 2 の **レビュー前 doc(`draft` / `ready for review`)の landing** に限る。
-レビュー PR(`reviewing` 以降)を含むそれ以外の develop / main へのマージはユーザーが行う。
+エージェントが自分の判断で PR なしに develop へマージしてよいのは、上記 2 の **レビュー前 doc(`draft` / `ready for review`)の landing** に限る。
+レビュー PR(`reviewing` 以降)を含むそれ以外のマージはユーザーが行い、エージェントはユーザーが明示的に指示したときだけ代行する。
 詳細は [../git-and-pr.md](../git-and-pr.md)「Design Doc のブランチ運用」を参照。
 
 ### レビュープロセス

@@ -11,7 +11,7 @@
 - `develop` から機能実装単位で `feature/hoge` ブランチを切る。`hoge` は実装する機能を簡潔に表したスネークケースの英数字。
 - `feature/hoge` で開発し、一通り完成したら `--no-ff` で `develop` にマージする。
 - `main` へのマージも `--no-ff` で行う。
-- **`main` へのマージはユーザーの確認を経てから行う。エージェントが勝手に `main` にマージしてはならない。**
+- **`main` へのマージはユーザーが行う。エージェントが自分の判断で `main` にマージしてはならない**(ユーザーが明示的に指示したときの代行は下記「マージと同期」)。
 - **リポジトリの default branch は `develop` にする**。**これはユーザーが GitHub の Settings で手作業で行うリポジトリ設定であり、エージェントは変更を試みない**(bot の GitHub App に Administration 権限が無く、API から変更できない)。PR 本文の `Closes #N` のような closing keyword は **default branch へのマージでのみ** Issue を自動クローズするため、default branch が `main` のままだと feature → develop のマージで Issue が閉じない。
 
 ## コミットメッセージ
@@ -97,8 +97,8 @@ Design Doc は status を進めながら、レビューを GitHub の PR 上で�
 - **確定とマージ**: ユーザーが PR で承認したら `status: approved`(承認時に代替案を簡潔形へ整理する)、設計が立たないなら `rejected` + `## 却下理由` 節にして、**ユーザーが PR を develop にマージする**。マージ後にブランチを retire(削除)する。
 - **承認後の実装は別物。** approved doc の実装は次の「Design Doc に紐づく実装」に従い、親 Issue + サブ Issue + 各実装の **ゲーティング PR**(コードレビュー)で行う。
 
-エージェントが develop へ PR なしでマージしてよいのは、上記の **レビュー前 doc(`draft` / `ready for review`)の landing に限る**。
-レビュー PR(`reviewing` 以降)を含む、それ以外の develop / main へのマージはユーザーが行う。
+エージェントが自分の判断で develop へ PR なしマージしてよいのは、上記の **レビュー前 doc(`draft` / `ready for review`)の landing に限る**。
+レビュー PR(`reviewing` 以降)を含むそれ以外のマージはユーザーが行い、エージェントはユーザーが明示的に指示したときだけ代行する(下記「マージと同期」)。
 
 ## Design Doc に紐づく実装
 
@@ -118,7 +118,7 @@ skill、再利用スクリプト、design doc のルール、参照ドキュメ�
 - ハーネスの変更を `develop` に直接コミットしない。Issue を立て、`feature/hoge` ブランチで変更し、PR を作ってユーザーの PR レビューを受ける。
 - 共有ハーネスの変更は共有ハーネスリポジトリへの Issue + PR、プロジェクト固有の変更はプロジェクトリポジトリへの Issue + PR で行う(判断は [editing.md](editing.md)「共有ハーネスかプロジェクト固有かの判断」)。消費側プロジェクトの `harness/`(ベンダー領域)は直接編集しない。
 - ハーネス更新も PR がレビューの単位である。関係ないハーネス変更や、ハーネスとプロダクトコード/Design Doc 本文の変更を 1 つの PR に混ぜない。
-- マージはユーザーが行う。エージェントが勝手に `develop` / `main` にマージしない。
+- マージはユーザーが行う。エージェントは自分の判断で `develop` / `main` にマージしない。
 - ハーネスの中身をどう書くか(既存とのマージ・整理、常時規約の整理の規律)は [editing.md](editing.md) に従う。
 
 ## レビュー対応
@@ -129,7 +129,8 @@ skill、再利用スクリプト、design doc のルール、参照ドキュメ�
 
 ## マージと同期
 
-- **ゲーティング PR(実装コード・ハーネス変更・Design Doc のレビュー PR)はレビューが通ったら _ユーザーが_ マージする。エージェントは勝手にマージしない。** エージェントが `feature → develop` を `--no-ff` で PR なしマージしてよいのは、**レビュー前 Design Doc(`draft` / `ready for review`)の develop への集約 landing に限る**(上記「Design Doc のブランチ運用」)。`main` へのマージは常にユーザーの確認を経る。
-- **develop → main のマージは、ユーザーの指示を受けて GitHub の Merges API で行う**(コマンドは `pr-workflow`「develop → main のマージ」)。サーバ側で bot 名義のマージコミットが作られる。ローカルの `git merge` と `merge-commit.mjs` は使わない(`merge-commit.mjs` は develop / main への直接コミットを拒否する)。
+- **ゲーティング PR(実装コード・ハーネス変更・Design Doc のレビュー PR)のマージはユーザーが行う。** レビューが通ったこと・PR が承認されたことは、エージェントがマージしてよい理由にはならない。エージェントが自分の判断で `feature → develop` を `--no-ff` で PR なしマージしてよいのは、**レビュー前 Design Doc(`draft` / `ready for review`)の develop への集約 landing に限る**(上記「Design Doc のブランチ運用」)。
+- **ユーザーが対象を名指しして明示的にマージを指示したときは、エージェントが代行する。** 条件は、どれをマージするのかがユーザーの指示で特定できること(PR 番号や「develop を main にマージして」など)である。
+- **代行は GitHub 側の操作で行う**(PR は `pr merge`、develop → main は Merges API。コマンドは `pr-workflow`「マージと同期」「develop → main のマージ」)。サーバ側で bot 名義のマージコミットが作られる。ローカルの `git merge` と `merge-commit.mjs` は使わない(`merge-commit.mjs` は develop / main への直接コミットを拒否する)。
 - PR がマージされたか等は `gh` でチェックする。
 - `git fetch` / `git pull` でローカルをリモートに追従させ続ける。
