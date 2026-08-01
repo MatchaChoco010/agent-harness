@@ -92,12 +92,13 @@ Design Doc は status を進めながら、レビューを GitHub の PR 上で�
 
 - **1 Design Doc(または密結合な 1 設計セット)= 1 つの長命 `feature/design-<topic>` ブランチ。** 執筆は `design-doc` / `design-doc-write` skill で行う。書きかけは `status: draft`、完成してレビューを待てる状態になったら `ready for review` にする。
 - **レビュー前 doc は develop に集約(PR なし landing)**: `draft` と `ready for review` のどちらも、`feature → develop` を `--no-ff` でエージェントがマージして landing する(PR なし)。これでレビュー前の doc が develop に集まり、ユーザーはブランチ切替なしに markdown を読める。フィードバックや続きの執筆は同じブランチへ追記し、再度 `--no-ff` で develop にマージする。これは規約どおりのブランチマージで、develop への直接コミット/プッシュではない。
-- **レビュー PR(develop から status を変えるだけ)**: ユーザーがレビュー開始を宣言したら、最新 develop から `feature/design-review-<topic>` を切り、対象 doc の `status` を `ready for review` → `reviewing` に変えて develop への PR を立てる(`pr-workflow` skill「Design Doc レビュー PR」)。レビュー対象は既に develop にあるので差分は status 行だけだが、GitHub は変更ファイルなら差分外の行にもコメントできるため全文をレビューできる。関連 doc があれば 1 つの PR にまとめる(PR 作成前に同時提示すべき関連 doc が無いか確認する)。
+- **レビュー PR(develop から status を変えるだけ)**: doc を `ready for review` まで書き上げたら、landing に続けてエージェントがレビュー PR を立てる(ユーザーのレビュー開始宣言は待たない)。最新 develop から `feature/design-review-<topic>` を切り、対象 doc の `status` を `ready for review` → `reviewing` に変えて develop への PR を立てる(`pr-workflow` skill「Design Doc レビュー PR」)。レビュー対象は既に develop にあるので差分は status 行だけだが、GitHub は変更ファイルなら差分外の行にもコメントできるため全文をレビューできる。`draft` のまま執筆を中断するときは landing だけで止め、レビュー PR は立てない。関連 doc のセットは、全部が `ready for review` になってから 1 つの PR にまとめる(PR 作成前に同時提示すべき関連 doc が無いか確認する)。
 - **レビューと反映**: 議論は PR のコメントで行い、各スレッドの解決を doc 本文へ反映する(PR ブランチへ追記コミット)。論点を「未解決の論点」節へ移してよいのは、先送り自体を設計判断として根拠付けられる場合だけである(節に書くべき内容は [design/template.md](design/template.md))。議論が収束しないという理由で移さず、本文の決定として書き切る。
 - **確定とマージ**: ユーザーが PR で承認したら `status: approved`(承認時に代替案を簡潔形へ整理する)、設計が立たないなら `rejected` + `## 却下理由` 節にして、**ユーザーが PR を develop にマージする**。マージ後にブランチを retire(削除)する。
 - **承認後の実装は別物。** approved doc の実装は次の「Design Doc に紐づく実装」に従い、親 Issue + サブ Issue + 各実装の **ゲーティング PR**(コードレビュー)で行う。
+- **実装状態の更新も PR なし landing**: doc ヘッダーの `implementation` 行だけを変える差分は、PR にせず `feature/hoge → develop` を `--no-ff` で landing する。他の変更を伴うときは PR にする(理由は [design/README.md](design/README.md)「implementation(実装状態)」)。
 
-エージェントが自分の判断で develop へ PR なしマージしてよいのは、上記の **レビュー前 doc(`draft` / `ready for review`)の landing に限る**。
+エージェントが自分の判断で develop へ PR なしマージしてよいのは、上記の **レビュー前 doc(`draft` / `ready for review`)の landing と、`implementation` 行だけの更新に限る**。
 レビュー PR(`reviewing` 以降)を含むそれ以外のマージはユーザーが行い、エージェントはユーザーが明示的に指示したときだけ代行する(下記「マージと同期」)。
 
 ## Design Doc に紐づく実装
@@ -129,7 +130,7 @@ skill、再利用スクリプト、design doc のルール、参照ドキュメ�
 
 ## マージと同期
 
-- **ゲーティング PR(実装コード・ハーネス変更・Design Doc のレビュー PR)のマージはユーザーが行う。** レビューが通ったこと・PR が承認されたことは、エージェントがマージしてよい理由にはならない。エージェントが自分の判断で `feature → develop` を `--no-ff` で PR なしマージしてよいのは、**レビュー前 Design Doc(`draft` / `ready for review`)の develop への集約 landing に限る**(上記「Design Doc のブランチ運用」)。
+- **ゲーティング PR(実装コード・ハーネス変更・Design Doc のレビュー PR)のマージはユーザーが行う。** レビューが通ったこと・PR が承認されたことは、エージェントがマージしてよい理由にはならない。エージェントが自分の判断で `feature → develop` を `--no-ff` で PR なしマージしてよいのは、**レビュー前 Design Doc(`draft` / `ready for review`)の develop への集約 landing と、design doc の `implementation` 行だけの更新に限る**(上記「Design Doc のブランチ運用」)。
 - **ユーザーが対象を名指しして明示的にマージを指示したときは、エージェントが代行する。** 条件は、どれをマージするのかがユーザーの指示で特定できること(PR 番号や「develop を main にマージして」など)である。
 - **代行は GitHub 側の操作で行う**(PR は `pr merge`、develop → main は Merges API。コマンドは `pr-workflow`「マージと同期」「develop → main のマージ」)。サーバ側で bot 名義のマージコミットが作られる。ローカルの `git merge` と `merge-commit.mjs` は使わない(`merge-commit.mjs` は develop / main への直接コミットを拒否する)。
 - PR がマージされたか等は `gh` でチェックする。
