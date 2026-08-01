@@ -77,14 +77,16 @@ PR を作る前に必ず通す。design doc のレビュー PR とハーネス�
    node harness/scripts/gh/gh.mjs api graphql -f query='mutation($p:ID!,$c:ID!){addSubIssue(input:{issueId:$p,subIssueId:$c}){issue{number}}}' -F p="$parent" -F c="$child"
    ```
 3. Sub-issue を実装順に並べ、各 Sub-issue に紐づく `feature/hoge` PR を作って順に実装する。
-4. 単一バグなど分割不要なものは Sub-issue を使わず単体 Issue + PR でよい。
+4. design doc の実装では、着手時に doc ヘッダーを `implementation: in-progress`、実装 PR が全部マージされたら `done (YYYY-MM-DD)` に更新する。この行だけの差分は PR にせず `feature/hoge → develop` を `--no-ff` で landing する(`harness/docs/git-and-pr.md`「Design Doc のブランチ運用」)。
+5. 単一バグなど分割不要なものは Sub-issue を使わず単体 Issue + PR でよい。
 
 ## Design Doc レビュー PR(ready for review → reviewing)
 
-develop 上にある `ready for review` の design doc を、ユーザーのレビュー開始宣言で **レビュー PR** に載せる手順。
-レビュー前の doc は既に develop に集約されている(`design-doc-write` で landing 済み)ので、この PR は **status を `reviewing` に変えるだけ**でよい。方針の正は `harness/docs/design/README.md`「レビュープロセス」。
+develop 上にある `ready for review` の design doc を **レビュー PR** に載せる手順。
+doc を `ready for review` まで書き上げて landing したら、続けてこの手順に入る。ユーザーからレビュー開始を依頼されたときも同じ手順で行う。
+レビュー対象の doc は既に develop に集約されている(landing 済み)ので、この PR は **status を `reviewing` に変えるだけ**でよい。方針の正は `harness/docs/design/README.md`「レビュープロセス」。
 
-1. **対象を確定する。** レビューする doc を選び、相互参照する/同じ設計テーマを分担する **関連 doc が無いか確認**する(`docs/design/INDEX.md` や doc 間リンクで確認)。あれば、それらをまとめて1つの PR に入れる。
+1. **対象を確定する。** レビューする doc を選び、相互参照する/同じ設計テーマを分担する **関連 doc が無いか確認**する(`docs/design/INDEX.md` や doc 間リンクで確認)。あれば、それらをまとめて1つの PR に入れる。セットの一部がまだ `draft` なら、全部が `ready for review` になるまで PR を立てない。
 2. **develop からレビュー用ブランチを切る。** 最新 develop から `feature/design-review-<topic>` を切る(`git switch develop && git pull --ff-only && git switch -c feature/design-review-<topic>`)。
 3. **status を `reviewing` にする。** 対象 doc 全部のヘッダー `status` を `ready for review` → `reviewing` に変えてコミットする(差分はこの status 行だけでよい)。
 4. **PR を作る。** `feature/design-review-<topic> → develop` で PR を作り、本文に対象 doc へのリンクと「doc レビュー用」である旨を書く。URL をユーザーに提示する。差分は status 行だけだが、GitHub は変更ファイルなら差分外の行にもコメントできるので、ユーザーは「Files changed」で全文にコメントできる。
@@ -95,7 +97,7 @@ develop 上にある `ready for review` の design doc を、ユーザーのレ�
    ```
 5. **レビュー対応。** コメントは下記「レビューコメントへの対応」で扱う。各スレッドの結論は **doc 本文へ反映**する(PR ブランチへ追記コミット。out-of-band にしない)。論点を「未解決の論点」節へ移してよいのは、先送り自体を設計判断として根拠付けられる場合だけである(節に書くべき内容は `harness/docs/design/template.md`)。議論が収束しないという理由で移さず、本文の決定として書き切る。
 6. **確定。** ユーザーが承認を投稿したら `status: approved` にし、**代替案を簡潔形へ整理**してから(`harness/docs/design/README.md`「代替案はレビュー中に詳しく、approve 後に簡潔へ」)ユーザーがマージする。設計が立たない/不要と結論したら `status: rejected` + `## 却下理由` 節にしてユーザーがマージする。
-7. マージはユーザーが行う(レビュー PR はゲーティング扱い)。エージェントが PR なしで develop にマージしてよいのは、レビュー前 doc(`draft` / `ready for review`)の集約 landing のみ(`harness/docs/git-and-pr.md`)。
+7. マージはユーザーが行う(レビュー PR はゲーティング扱い)。エージェントが自分の判断で PR なしに develop へマージしてよいのは、レビュー前 doc(`draft` / `ready for review`)の集約 landing と `implementation` 行だけの更新のみ(`harness/docs/git-and-pr.md`)。
 
 ## レビューコメントへの対応
 
@@ -138,7 +140,10 @@ node harness/scripts/gh/merge-commit.mjs "Merge origin/develop into feature/hoge
 
 ## マージと同期
 
-- レビューが通ったら **ユーザーが** マージする。エージェントは勝手にマージしない。
+- マージは **ユーザーが** 行う。エージェントは自分の判断でマージしない。ユーザーが対象の PR を名指しして明示的に指示したときだけ、次で代行する(`--merge` でマージコミットを作る。`--squash` / `--rebase` は使わない)。
+  ```sh
+  node harness/scripts/gh/gh.mjs pr merge <PR番号> --merge
+  ```
 - マージ状態を確認する。
   ```sh
   node harness/scripts/gh/gh.mjs pr view <PR番号> --json state,mergedAt,mergeStateStatus

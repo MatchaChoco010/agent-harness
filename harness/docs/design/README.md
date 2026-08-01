@@ -169,6 +169,11 @@ design doc を `rejected` にするときは、なぜ採用しなかったかを
 - `in-progress` — 実装中。
 - `done (YYYY-MM-DD)` — 実装完了。完了日を必ず記録する。
 
+実装に着手したら `in-progress`、実装が全部終わったら `done (YYYY-MM-DD)` に更新する。
+**この行だけを変える差分は PR にせず、develop に landing する**(`feature/hoge → develop` を `--no-ff`、PR なし)。
+実装の開始はユーザーの指示で決まり、完了は実装 PR のマージでユーザーが把握しているので、この行を PR でレビューする材料が無い。
+他の変更を伴うときは PR にする。
+
 ### 自己完結の原則
 
 design doc は単体で読めて完結していなければならない。
@@ -369,14 +374,14 @@ design doc は **書き上げて develop に集約し、ユーザーがレビュ
 
 1. 設計が必要な作業の前に design doc を書く。書きかけは `draft`、完成してレビューを待てる状態になったら `ready for review` にする。
 2. **`draft` / `ready for review` のどちらも、いったん develop に landing する**(`feature/design-<topic> → develop` を `--no-ff`、PR なし)。これでレビュー前の doc が develop に集まり、ユーザーはブランチ切替なしに読める。フィードバックや続きの執筆は同じブランチに追記して再度 develop へマージする。
-3. ユーザーがレビュー開始を宣言したら、develop から対象 doc の status を `ready for review` → `reviewing` に変える **レビュー PR** を立てる(`pr-workflow` skill「Design Doc レビュー PR」)。関連 doc があれば 1 つの PR にまとめる(下記「レビュープロセス」)。
+3. `ready for review` まで書き上げたら、landing に続けて **レビュー PR** を立てる(develop から対象 doc の status を `ready for review` → `reviewing` に変える。`pr-workflow` skill「Design Doc レビュー PR」)。`draft` のまま執筆を中断するときは landing だけで止める。関連 doc のセットは、全部が `ready for review` になってから 1 つの PR にまとめる(下記「レビュープロセス」)。
 4. レビューはその PR のコメントで行い、各スレッドの解決を doc 本文に反映する(PR ブランチに追記コミット)。
 5. ユーザーが PR で承認したら status を `approved`(代替案を簡潔形に整理。「テンプレート」)、設計が立たないと結論したら `rejected`(`## 却下理由` 節を付ける)にして、ユーザーが PR を develop にマージする。
-6. 承認後の実装は [../git-and-pr.md](../git-and-pr.md)「Design Doc に紐づく実装」に従う。
+6. 承認後の実装は [../git-and-pr.md](../git-and-pr.md)「Design Doc に紐づく実装」に従い、進捗に合わせて `implementation` を更新する(上記「implementation(実装状態)」)。
 7. 後日設計を変えるときは新しい番号の doc で上書きの意思決定を記録する。
 
-エージェントが PR なしで develop にマージしてよいのは、上記 2 の **レビュー前 doc(`draft` / `ready for review`)の landing** に限る。
-レビュー PR(`reviewing` 以降)を含むそれ以外の develop / main へのマージはユーザーが行う。
+エージェントが自分の判断で PR なしに develop へマージしてよいのは、上記 2 の **レビュー前 doc(`draft` / `ready for review`)の landing と、`implementation` 行だけの更新** に限る。
+レビュー PR(`reviewing` 以降)を含むそれ以外のマージはユーザーが行い、エージェントはユーザーが明示的に指示したときだけ代行する。
 詳細は [../git-and-pr.md](../git-and-pr.md)「Design Doc のブランチ運用」を参照。
 
 ### レビュープロセス
@@ -385,7 +390,7 @@ design doc は **書き上げて develop に集約し、ユーザーがレビュ
 レビュー対象の doc は既に develop にあるので、**レビュー PR は develop から status を `reviewing` に変えるだけ**でよい。GitHub は変更ファイルなら差分の外の行にもコメントできるので、status 一行だけの差分でも全文をレビューできる。
 
 - **PR の単位**: 1 doc、または相互参照する/同じ設計テーマを分担する関連 doc のセット。PR を作る前に、同時に提示すべき関連 doc が無いか必ず確認し、あればまとめて `reviewing` にして 1 つの PR に入れる(「関連する design doc はまとめてレビューする」)。
-- **レビュー開始は skill で**: ユーザーがレビュー開始を宣言したら、対象を `reviewing` にしてレビュー PR を作り URL を提示する(`pr-workflow` skill「Design Doc レビュー PR」)。
+- **レビュー開始**: doc を `ready for review` まで書き上げて landing したら、続けて対象を `reviewing` にするレビュー PR を作り、URL を提示する(`pr-workflow` skill「Design Doc レビュー PR」)。
 - **コメントは PR で、解決は本文へ**: 議論は PR のスレッドで行い、各スレッドが収束したら **その理解を doc 本文へ反映する**。本文を読めば分かる状態にし、PR コメントの中だけで説明を完結させない(out-of-band にしない)。
 - **スレッドを放置しない**: 対応済みのスレッドは resolved にする。長引く論点も、まず本文の決定として書き切ることを目指す。「未解決の論点」節へ移せるのは、先送り自体を設計判断として根拠付けられる場合だけである(節に書くべき内容は template.md)。
 - **確定**: 一通り問題が無くなりユーザーが承認を投稿したら `approved`、根本的に立たない/不要と結論したら `rejected` にして、ユーザーが PR を develop にマージする。

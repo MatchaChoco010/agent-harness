@@ -15,8 +15,8 @@ design doc を **執筆 → 敵対的レビュー → 指摘反映** のラウ�
 1. **執筆前のすり合わせ。** 記録する意思決定を1つに定め、目的・解くべき問題・スコープの外枠をユーザーとすり合わせる(曖昧なら `grilling` で1問ずつ)。書き始めた後は、初稿が完成するまで設計判断・分割・スコープをユーザーに仰がない(正: `harness/docs/design/README.md`「初稿は執筆側が完成させる」)。
 2. **初稿の執筆。** `design-doc-write` の手順に従う(設計案の列挙と敵対的比較 → 骨子確定 → 骨子に沿った執筆)。骨子ファイルは収束ラウンドでも使うので残す。
 3. **収束ラウンド(下記)。** must-fix が出なくなるまで回す。
-4. **仕上げ。** status を `ready for review` にし、INDEX.md を更新し、`feature/design-<topic> → develop` を `--no-ff`(PR なし)で landing する(`harness/docs/git-and-pr.md`「Design Doc のブランチ運用」)。各ラウンドの指摘と対応を要約し、doc の場所を伝えてユーザーにレビュー開始を促す。
-5. **レビュー PR。** ユーザーがレビュー開始を宣言したら `pr-workflow`「Design Doc レビュー PR」に従う(以降のマージはユーザー)。
+4. **仕上げ。** status を `ready for review` にし、INDEX.md を更新し、`feature/design-<topic> → develop` を `--no-ff`(PR なし)で landing する(`harness/docs/git-and-pr.md`「Design Doc のブランチ運用」)。
+5. **レビュー PR。** landing に続けて `pr-workflow`「Design Doc レビュー PR」でレビュー PR を立て、各ラウンドの指摘と対応の要約とともに PR の URL をユーザーに伝える(以降のマージはユーザー)。`draft` のまま執筆を中断するときは landing だけで止め、レビュー PR は立てない。
 
 既存 doc のレビュー+修正から始める場合は、まず対象 doc から骨子(決定・代替案・セクション別の主張)を書き起こしてから、収束ラウンドに入る。
 
