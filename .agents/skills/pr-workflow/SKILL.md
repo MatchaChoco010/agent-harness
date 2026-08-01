@@ -159,10 +159,34 @@ node harness/scripts/gh/merge-commit.mjs "Merge origin/develop into feature/hoge
   git fetch --prune
   git switch develop && git pull --ff-only
   ```
+- **リモートのブランチを消す前に、その PR が MERGED であることを 1 本ずつ確かめる。** ブランチが消えると、そこを宛先にしている PR は GitHub が自動で閉じる(→ `harness/docs/git-and-pr.md`「マージと同期」)。まとめてマージしたときほど、1 本だけ失敗しているのを見落としやすい。
+  ```sh
+  node harness/scripts/gh/gh.mjs pr view <PR番号> --json state --jq .state   # MERGED を確かめてから消す
+  node harness/scripts/gh/gh.mjs pr merge <PR番号> --merge --delete-branch   # 積んだ PR が無いときだけ
+  ```
 - マージ済みのローカル feature ブランチは削除してよい。
   ```sh
   git branch -d feature/hoge
   ```
+
+## PR を積んだときのマージの順番
+
+手前の PR がまだマージされていないうちに続きを出すときは、上の PR の宛先を手前のブランチにする(積む)。
+畳む順番は `harness/docs/git-and-pr.md`「PR を積むとき」が正で、**土台をマージする前に上の PR の宛先を develop へ付け替える**。
+
+```sh
+node harness/scripts/gh/gh.mjs pr edit <上の PR番号> --base develop
+node harness/scripts/gh/gh.mjs pr merge <手前の PR番号> --merge --delete-branch
+```
+
+順番を逆にすると上の PR が閉じる。
+戻し方は同ドキュメント「巻き添えで閉じた PR を戻す」。
+
+```sh
+git push origin <SHA>:refs/heads/<消したブランチ>          # 先にブランチを作り直す
+node harness/scripts/gh/gh.mjs pr reopen <PR番号>
+node harness/scripts/gh/gh.mjs pr edit <PR番号> --base develop
+```
 
 ## develop → main のマージ(ユーザーの指示があったときのみ)
 
