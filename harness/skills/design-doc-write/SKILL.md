@@ -37,7 +37,7 @@ design doc の中身のルール(何を書くか・高度・簡潔さ・自己�
 4. **骨子の確定。** 改訂後の各案を、設計原則・Pros/Cons・コードベースの一貫性で比較し、メイン設計・代替案・セクション別の主張を自分で決めて、骨子ファイルをリポジトリ外の作業ディレクトリに Write する(下記「骨子の形式」)。ユーザーに問わない。
 5. **執筆。** `docs/design/INDEX.md` で次の連番を決め、骨子に doc パス・ヘッダー情報を確定させて、骨子の決定・代替案・セクション別の主張・ヘッダー指定に従って doc を書く。骨子に無いセクション・概念を増やさない。セットのときは骨子の「セット横断契約」を正として doc ごとに書く(セット全体を一気に混ぜて書かない)。
 6. **自己検査。** 書き上げた doc を「完成チェック」で通読する。INDEX.md の索引と件数を更新する。
-7. **landing。** `feature/design-<topic> → develop` を `--no-ff`(PR なし)で landing し、レビュー前 doc を develop に集約する(`harness/docs/git-and-pr.md`「Design Doc のブランチ運用」)。
+7. **landing。** `feature/design-<topic> → develop` を `--no-ff`(PR なし)で landing し、レビュー前 doc を develop に集約する(`harness/docs/git-and-pr.md`「Design Doc のブランチ運用」)。敵対的レビューを回さずここで初稿を完成とするなら、status を `ready for review` にして、landing に続けて `pr-workflow`「Design Doc レビュー PR」でレビュー PR を立てる。執筆を中断するときは `draft` のままにして landing だけで止める。
 8. 敵対的レビューまで回すなら `design-doc` の収束ラウンドに進む(骨子ファイルは以降のラウンドでも使うので残す)。
 
 ## 骨子(skeleton)の形式
