@@ -95,7 +95,7 @@ develop 上にある `ready for review` の design doc を、ユーザーのレ�
    ```
 5. **レビュー対応。** コメントは下記「レビューコメントへの対応」で扱う。各スレッドの結論は **doc 本文へ反映**する(PR ブランチへ追記コミット。out-of-band にしない)。論点を「未解決の論点」節へ移してよいのは、先送り自体を設計判断として根拠付けられる場合だけである(節に書くべき内容は `harness/docs/design/template.md`)。議論が収束しないという理由で移さず、本文の決定として書き切る。
 6. **確定。** ユーザーが承認を投稿したら `status: approved` にし、**代替案を簡潔形へ整理**してから(`harness/docs/design/README.md`「代替案はレビュー中に詳しく、approve 後に簡潔へ」)ユーザーがマージする。設計が立たない/不要と結論したら `status: rejected` + `## 却下理由` 節にしてユーザーがマージする。
-7. マージはユーザーが行う(レビュー PR はゲーティング扱い)。エージェントが PR なしで develop にマージしてよいのは、レビュー前 doc(`draft` / `ready for review`)の集約 landing のみ(`harness/docs/git-and-pr.md`)。
+7. マージはユーザーが行う(レビュー PR はゲーティング扱い)。エージェントが自分の判断で PR なしに develop へマージしてよいのは、レビュー前 doc(`draft` / `ready for review`)の集約 landing のみ(`harness/docs/git-and-pr.md`)。
 
 ## レビューコメントへの対応
 
@@ -138,7 +138,10 @@ node harness/scripts/gh/merge-commit.mjs "Merge origin/develop into feature/hoge
 
 ## マージと同期
 
-- レビューが通ったら **ユーザーが** マージする。エージェントは勝手にマージしない。
+- マージは **ユーザーが** 行う。エージェントは自分の判断でマージしない。ユーザーが対象の PR を名指しして明示的に指示したときだけ、次で代行する(`--merge` でマージコミットを作る。`--squash` / `--rebase` は使わない)。
+  ```sh
+  node harness/scripts/gh/gh.mjs pr merge <PR番号> --merge
+  ```
 - マージ状態を確認する。
   ```sh
   node harness/scripts/gh/gh.mjs pr view <PR番号> --json state,mergedAt,mergeStateStatus
