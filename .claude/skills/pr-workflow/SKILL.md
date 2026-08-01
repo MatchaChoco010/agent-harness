@@ -83,7 +83,7 @@ PR を作る前に必ず通す。design doc のレビュー PR とハーネス�
 ## Design Doc レビュー PR(ready for review → reviewing)
 
 develop 上にある `ready for review` の design doc を **レビュー PR** に載せる手順。
-doc を `ready for review` まで書き上げて landing したら、続けてこの手順に入る(ユーザーのレビュー開始宣言は待たない)。ユーザーが後からレビュー開始を宣言したときも同じ手順で行う。
+doc を `ready for review` まで書き上げて landing したら、続けてこの手順に入る。ユーザーからレビュー開始を依頼されたときも同じ手順で行う。
 レビュー対象の doc は既に develop に集約されている(landing 済み)ので、この PR は **status を `reviewing` に変えるだけ**でよい。方針の正は `harness/docs/design/README.md`「レビュープロセス」。
 
 1. **対象を確定する。** レビューする doc を選び、相互参照する/同じ設計テーマを分担する **関連 doc が無いか確認**する(`docs/design/INDEX.md` や doc 間リンクで確認)。あれば、それらをまとめて1つの PR に入れる。セットの一部がまだ `draft` なら、全部が `ready for review` になるまで PR を立てない。
